@@ -20,6 +20,14 @@ class Agent(object):
         self._planner = Planner(city_name)
 
     def get_distance(self, start_point, end_point):
+        """
+            Function to get the distance between two points, considering the fastest
+            route to get there
+        :param start_point:
+        :param end_point:
+        :return:
+        """
+
         path_distance = self._planner.get_shortest_path_distance(
             [start_point.location.x, start_point.location.y, 22]
             , [start_point.orientation.x, start_point.orientation.y, 22]

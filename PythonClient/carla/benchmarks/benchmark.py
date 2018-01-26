@@ -101,6 +101,9 @@ class Benchmark(object):
         measurement_vec = []
         frame = 0
         distance = 10000
+        # Just start some values to measurements.
+        curr_x = measurements.player_measurements.transform.location.x
+        curr_y = measurements.player_measurements.transform.location.y
 
         while(t1 - t0) < (time_out * 1000) and not success:
             measurements, sensor_data = carla.read_data()

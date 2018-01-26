@@ -16,6 +16,12 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 
 def get_colisions(selected_matrix, header):
 
+    """
+
+    :param selected_matrix: The matrix of all the collected rewards during benchmark
+    :param header: The header from the csv files collected
+    :return: list with the colisions counted by
+    """
     count_gen = 0
     count_ped = 0
     count_car = 0
@@ -103,6 +109,34 @@ def get_out_of_road_lane(selected_matrix, header):
 
 def compute_summary(filename, dynamic_episodes):
 
+
+
+    """ Compute Summary of Experiments Executed.
+
+    Computes several statistics from a certain benchmark execution.
+    This execution is stored by the benchmark class in two csv files.
+    The output is averaged by task
+
+    Basically the summary is organized as following.
+
+
+    A dictionary where the keys are the metrics that we collect
+
+        average_completion: The average percentage of the distance travelled
+
+    On each dictionary field there is
+    another dictionary.
+    For this dictionary, each key is a weather condition and
+    the values are the averaged or summed values for each task
+
+
+    :param filename:
+    :param dynamic_episodes You have to pass all the dynamic_episodes:
+    :return :
+        The computed dictionary
+
+
+    """
     # Separate the PATH and the basename
     path = os.path.dirname(filename)
     base_name = os.path.basename(filename)
@@ -181,7 +215,6 @@ def compute_summary(filename, dynamic_episodes):
                 ((sum(task_data_matrix[:, header.index('final_time')]))/3600.0)
 
 
-
             if list(tasks).index(t) in set(dynamic_episodes):
 
                 lane_road = get_out_of_road_lane(
@@ -189,17 +222,16 @@ def compute_summary(filename, dynamic_episodes):
                 colisions = get_colisions(task_reward_matrix, header_details)
 
 
-
                 metrics_dictionary['intersection_offroad'][
-                    w][t] = lane_road[0]/km_run
+                    w][t] = lane_road[0]
                 metrics_dictionary['intersection_otherlane'][
-                    w][t] = lane_road[1]/km_run
+                    w][t] = lane_road[1]
                 metrics_dictionary['collision_pedestrians'][
-                    w][t] = colisions[2]/km_run
+                    w][t] = colisions[2]
                 metrics_dictionary['collision_vehicles'][
-                    w][t] = colisions[1]/km_run
+                    w][t] = colisions[1]
                 metrics_dictionary['collision_other'][
-                    w][t] = colisions[0]/km_run
+                    w][t] = colisions[0]
 
 
     return metrics_dictionary
