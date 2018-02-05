@@ -64,7 +64,7 @@ class CityTrack(object):
         return current_node != self._previous_node
 
 
-    # TODO: This two functions are stupid
+    # TODO: These two functions are not usefull, change them
     def is_away_from_intersection(self, current_node):
         return self._closest_intersection_position(current_node) > 1
 

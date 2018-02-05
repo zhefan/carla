@@ -29,7 +29,7 @@ def distance(t1, t2):
 
 class Waypointer(object):
 
-    def __init__(self, config, debug=False):
+    def __init__(self, config, debug=True):
 
         self.debug = debug
 
@@ -81,7 +81,16 @@ class Waypointer(object):
         #self.grid = self.make_grid()
         #self.walls = self.make_walls()
 
+    def get_debug_image(self, height=None):
+        if height is not None:
+            img = Image.fromarray(self.search_image.astype(np.uint8))
 
+            aspect_ratio = height / float(self.search_image.shape[0])
+
+            img = img.resize((int(aspect_ratio * self.search_image.shape[1]), height), Image.ANTIALIAS)
+            img.load()
+            return np.asarray(img, dtype="int32")
+        return np.fliplr(self.search_image)
 
     def reset(self):
         self.last_trajectory = []
@@ -115,9 +124,11 @@ class Waypointer(object):
         x = int(map_point[0])
         y = int(map_point[1])
 
-        square_crop = map_central_2d[(y - 20):(y + 20), (x - 20):(x + 20)]
+        square_crop = map_central_2d[(y - 30):(y + 30), (x - 30):(x + 30)]
         small_distance = 10000
-        closest_point = None
+        closest_point = [15 - square_crop.shape[1] / 2, 15 - square_crop.shape[0] / 2]
+
+
 
         # print square_crop
         for t in np.transpose(np.nonzero(square_crop)):
@@ -129,10 +140,9 @@ class Waypointer(object):
 
                 closest_point = [t[0] - square_crop.shape[1] / 2, t[1] - square_crop.shape[0] / 2]
 
-        # search_image[x,y ] = 128
+        #self.search_image[x,y ] = 128
         # search_image[x+closest_point[0],y +closest_point[1]] = 128
-        # image_result = Image.fromarray(search_image)
-        # image_result.save('images/square_crop.png')
+
         return np.array([x + closest_point[0], y + closest_point[1]])
 
     def _shift_points(self, distance_to_center, lane_points, inflection_position):
@@ -228,17 +238,21 @@ class Waypointer(object):
 
         return world_points, points_list
 
+
+
+
     def get_free_node_direction_target(self, pos, pos_ori, source):
 
-        free_nodes = self.get_adjacent_free_nodes(pos)
+        free_nodes = self._city_track._map._grid._get_adjacent_free_nodes(pos)
 
         added_walls = set()
         heading_start = np.array([pos_ori[0], pos_ori[1]])
+
         for adj in free_nodes:
 
             start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
-            # print ' Angle between ',angle
+            #print ' Angle between ',angle
             if (angle < 2 and adj != source):
                 added_walls.add((adj[0], adj[1]))
 
@@ -255,13 +269,13 @@ class Waypointer(object):
         # print ' ROute to be transformed ',next_route
         lane_points = []
         for point in next_route:
-            print point
+
             map_point = self._converter.convert_to_pixel([int(point[0]), int(point[1])])
             lane_points.append(self._search_around_square(map_point, self._map.map_image_center))
 
         if self.debug:
             self._print_trajectory(lane_points, [0, 0, 0, 255], 7)
-        print lane_points
+
 
         # print ' THE CURVE POINTS '
         _, points_indexes, curve_direction = self._find_curve_points(lane_points)
@@ -295,11 +309,12 @@ class Waypointer(object):
         # print self.grid
 
         while len(self._route) < 10:  # aDD EXTRA POINTS AFTER
-            # Keep adding after the target... A few points
-            # print self.route
+
+
             try:
                 free_nodes = list(self.get_free_node_direction_target(direction, direction_ori, node_source))
-                # print 'free -> ', free_nodes
+                #print 'free -> ', free_nodes
+                #print "Normal"
                 direction_ori = self._get_unit(np.array(direction), np.array(free_nodes[0]))
                 aux = -direction_ori[1]
                 direction_ori[1] = direction_ori[0]
@@ -307,8 +322,10 @@ class Waypointer(object):
                 # print 'orit ',direction_ori
                 direction = free_nodes[0]
             except:
-                # Repeate some route point, there is no problem.
+
+                #    # Repeate some route point, there is no problem.
                 direction = [round(self._route[-1][0] + direction_ori[0]), round(self._route[-1][1] + direction_ori[1])]
+                #direction = [round(self._route[-1][0]), round(self._route[-1][1])]
 
             # print 'ADDED ',direction
             self._route.append(direction)
@@ -320,11 +337,18 @@ class Waypointer(object):
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
 
+        if math.fabs(target_ori[0]) > math.fabs(target_ori[1]):
+            target_ori = (target_ori[0], 0.0, 0.0)
+        else:
+            target_ori = (0.0, target_ori[1], 0.0)
 
+        if math.fabs(source_ori[0]) > math.fabs(source_ori[1]):
+            source_ori = (source_ori[0], 0.0, 0.0)
+        else:
+            source_ori = (0.0, source_ori[1], 0.0)
 
         # print ''
-        print track_source
-        print track_target
+
         # print self.grid
 
         # reach the goal
@@ -348,7 +372,8 @@ class Waypointer(object):
             # print node_target
             self._route = self._city_track.compute_route(track_source, source_ori, track_target, target_ori)
 
-            print self._route
+            #print self._route
+
             # IF needed we add points after the objective, that is very hacky.
             self.add_extra_points(track_target, target_ori, track_source)
 
@@ -370,7 +395,7 @@ class Waypointer(object):
                 # That is because no route was ever computed. This is a problem we should solve.
                 if not self._route:
                     self._route = self._city_track.compute_route(track_source, source_ori, track_target, target_ori)
-                    print self._route
+                    #print self._route
 
                     self.add_extra_points(track_target, target_ori, track_source)
                     # print added_walls

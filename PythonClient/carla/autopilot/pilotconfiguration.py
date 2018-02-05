@@ -23,7 +23,7 @@ class ConfigAutopilot:
         self.extra_spacing_rights = -2 - extra_spacing
         self.extra_spacing_lefts = 10 + extra_spacing
         self.way_key_points_predicted = 7
-        self.number_of_waypoints = 100
+        self.number_of_waypoints = 30
 
         # CONTROLLER ----- PARAMETER CONFIGURATION
 
@@ -32,7 +32,7 @@ class ConfigAutopilot:
         # Default Brake
         self.brake = 0
         # Gain on computed steering angle
-        self.steer_gain = 0.8
+        self.steer_gain = 0.7
         # Distance Threshold Traffic Light
         self.tl_dist_thres = 1500
         # Angle Threshold Traffic Light

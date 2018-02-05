@@ -45,6 +45,7 @@ from carla import image_converter
 from carla import sensor
 from carla.client import make_carla_client, VehicleControl
 from carla.planner.map import CarlaMap
+from carla.planner.planner import sldist
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
@@ -56,6 +57,22 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 MINI_WINDOW_WIDTH = 320
 MINI_WINDOW_HEIGHT = 180
+
+
+poses =[[19,66],[79,14],[19,57],[23,1],\
+      [53,76],[42,13],[31,71],[33,5],\
+      [54,30],[10,61],[66,3],[27,12],\
+      [79,19],[2,29],[16,14],[5,57],\
+      [70,73],[46,67],[57,50],[61,49],[21,12],\
+      [51,81],[77,68],[56,65],[43,54]]
+
+
+def test_reach_goal(player,goal):
+    distance = sldist([player.location.x,player.location.y], [goal.location.x,goal.location.y])
+    if distance < 300.0:
+        return True
+    else:
+        return False
 
 
 def make_carla_settings():
@@ -154,10 +171,10 @@ class CarlaGame(object):
 
     def _on_new_episode(self):
         scene = self.client.load_settings(make_carla_settings())
-        number_of_player_starts = len(scene.player_start_spots)
-        player_start = np.random.randint(number_of_player_starts)
-        player_target = (player_start + np.random.randint(number_of_player_starts-1)) % \
-                         number_of_player_starts
+        #number_of_player_starts = len(scene.player_start_spots)
+        start_target = np.random.randint(len(poses))
+        player_start = poses[start_target][0]
+        player_target = poses[start_target][1]
         self._player_target_transform = scene.player_start_spots[player_target]
         print('Starting new episode...')
         self.client.start_episode(player_start)
@@ -201,6 +218,14 @@ class CarlaGame(object):
         # Get the control directly from the autopilot
         control = self._autopilot.run_step(measurements, None,
                                            self._player_target_transform)
+
+        if test_reach_goal(measurements.player_measurements.transform, self._player_target_transform ):
+
+            self._autopilot.waypointer.reset()
+
+            self._on_new_episode()
+
+
         if self._city_name is not None:
             self._position = self._map.convert_to_pixel([
                         measurements.player_measurements.transform.location.x,
@@ -270,7 +295,10 @@ class CarlaGame(object):
                 surface, (2 * gap_x + MINI_WINDOW_WIDTH, mini_image_y))
 
         if self._map_view is not None:
-            array = self._map_view
+
+            #array = self._map_view
+            array = self._autopilot.waypointer.get_debug_image(WINDOW_HEIGHT)
+
             array = array[:, :, :3]
 
             new_window_width =(float(WINDOW_HEIGHT)/float(self._map_shape[0]))*float(self._map_shape[1])

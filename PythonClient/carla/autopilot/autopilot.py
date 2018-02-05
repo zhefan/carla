@@ -82,9 +82,9 @@ class Autopilot(Agent):
 
             self.pid.target = target_speed_adjusted
             pid_gain = self.pid(feedback=self.current_speed)
-            print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
-            print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', self.current_speed, 'Speed Factor: ',
-                   self.speed_factor)
+            #print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
+            #print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', self.current_speed, 'Speed Factor: ',
+            #       self.speed_factor)
 
             self.throttle = min(max(self.throttle - 0.25 * pid_gain, 0), self.throttle_max)
 
@@ -118,7 +118,7 @@ class Autopilot(Agent):
         control.throttle = max(self.throttle, 0.01)  # Prevent N by putting at least 0.01
         control.brake = self.brake
 
-        print ('Throttle: ', control.throttle, 'Brake: ', control.brake, 'Steering Angle: ', control.steer)
+        #print ('Throttle: ', control.throttle, 'Brake: ', control.brake, 'Steering Angle: ', control.steer)
 
         return control
 
@@ -162,7 +162,7 @@ class Autopilot(Agent):
                                                        player.transform.orientation.x, player.transform.orientation.y,
                                                        player.transform.orientation.z) \
                                                        , (target.location.x, target.location.y, target.location.z) \
-                                                       , (1, 0, 0))
+                                                       , (target.orientation.x, target.orientation.y,target.orientation.z) )
         if waypoints == []:
             waypoints = [[player.transform.location.x, player.transform.location.y, 22]]
 
@@ -235,7 +235,7 @@ class Autopilot(Agent):
                 # v_angle = self.get_angle(v_vector,[ori_x_player,ori_y_player])
                 v_angle = self.get_angle(v_vector, wp_vector)
                 # print ('Vehicle: ', v_vector, v_dist, v_angle)
-                print (v_angle, self.v_angle_thres, self.coast_factor)
+                #print (v_angle, self.v_angle_thres, self.coast_factor)
                 if (
                         -0.5 * self.v_angle_thres / self.coast_factor < v_angle < self.v_angle_thres / self.coast_factor and v_dist < self.v_dist_thres * self.coast_factor) or (
                         -0.5 * self.v_angle_thres / self.coast_factor < v_angle < self.v_angle_thres and v_dist < self.v_dist_thres):
