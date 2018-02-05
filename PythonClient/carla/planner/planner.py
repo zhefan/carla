@@ -19,7 +19,6 @@ def compare(x, y):
 
 # Constants Used for the high level commands
 
-
 REACH_GOAL = 0.0
 GO_STRAIGHT = 5.0
 TURN_RIGHT = 4.0

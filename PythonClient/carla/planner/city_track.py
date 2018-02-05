@@ -63,6 +63,8 @@ class CityTrack(object):
     def is_at_new_node(self, current_node):
         return current_node != self._previous_node
 
+
+    # TODO: This two functions are stupid
     def is_away_from_intersection(self, current_node):
         return self._closest_intersection_position(current_node) > 1
 
@@ -114,6 +116,28 @@ class CityTrack(object):
         if not distance:
             return sldist(route[-1], pos)
         return sorted(distance)[0]
+
+    def get_distance_closest_node_route_turn(self, pos, route):
+        distance = []
+
+        for node_iter in route:
+
+            if node_iter in self._map._graph.turn_nodes():
+                distance.append(sldist(node_iter, pos))
+
+        if not distance:
+            return sldist(route[-1], pos)
+        return sorted(distance)[0]
+
+    def get_distance_closest_node_turn(self, pos):
+
+        distance = []
+        for node_iter in self._map._graph.turn_nodes():
+            distance.append(sldist(node_iter, pos))
+
+        return sorted(distance)[0]
+
+
 
 
     def _closest_intersection_position(self, current_node):
