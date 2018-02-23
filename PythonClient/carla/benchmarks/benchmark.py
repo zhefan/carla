@@ -67,7 +67,10 @@ class Benchmark(object):
                               'lane_intersect': -1,
                               'sidewalk_intersect': -1,
                               'pos_x': -1,
-                              'pos_y': -1
+                              'pos_y': -1,
+                              'steer': -1,
+                              'gas': -1,
+                              'brake': -1
                               }
 
 
