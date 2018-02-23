@@ -69,7 +69,7 @@ class Benchmark(object):
                               'pos_x': -1,
                               'pos_y': -1,
                               'steer': -1,
-                              'gas': -1,
+                              'throttle': -1,
                               'brake': -1
                               }
 
@@ -110,6 +110,7 @@ class Benchmark(object):
         t1 = t0
         success = False
         measurement_vec = []
+        control_vec = []
         frame = 0
         distance = 10000
 
@@ -134,7 +135,7 @@ class Benchmark(object):
             curr_y = measurements.player_measurements.transform.location.y
 
             measurement_vec.append(measurements.player_measurements)
-
+            control_vec.append(control)
             t1 = measurements.game_timestamp
 
             distance = sldist([curr_x, curr_y],
@@ -152,8 +153,8 @@ class Benchmark(object):
             frame += 1
 
         if success:
-            return 1, measurement_vec, float(t1 - t0) / 1000.0, distance
-        return 0, measurement_vec, time_out, distance
+            return 1, measurement_vec, control_vec, float(t1 - t0) / 1000.0, distance
+        return 0, measurement_vec, control_vec, time_out, distance
 
     def benchmark_agent(self, agent, carla):
         if self._line_on_file == 0:
@@ -210,7 +211,7 @@ class Benchmark(object):
 
                     time_out = self._calculate_time_out(path_distance)
                     # running the agent
-                    (result, reward_vec, final_time, remaining_distance) = \
+                    (result, reward_vec, control, control_vec,final_time, remaining_distance) = \
                         self.run_navigation_episode(
                             agent, carla, time_out, positions[end_point],
                             str(experiment.Conditions.WeatherId) + '_'
@@ -224,7 +225,7 @@ class Benchmark(object):
                         remaining_distance, final_time, time_out, result)
                     with open(self._internal_log_name, 'a+') as log:
                         log.write('Finished Experiment')
-                    self._write_details_results(experiment, rep, reward_vec)
+                    self._write_details_results(experiment, rep, reward_vec, control_vec)
 
                     if result > 0:
                         logging.info('+++++ Target achieved in %f seconds! +++++',
@@ -256,7 +257,7 @@ class Benchmark(object):
 
             w.writerow(self._dict_stats)
 
-    def _write_details_results(self, experiment, rep, reward_vec):
+    def _write_details_results(self, experiment, rep, reward_vec, control_vec):
 
         with open(os.path.join(self._full_name,
                                'details_' + self._suffix_name), 'a+') as rfd:
@@ -281,6 +282,12 @@ class Benchmark(object):
                     i].transform.location.x
                 self._dict_rewards['pos_y'] = reward_vec[
                     i].transform.location.y
+                self._dict_rewards['steer'] = control_vec[
+                    i].steer
+                self._dict_rewards['throttle'] = control_vec[
+                    i].throttle
+                self._dict_rewards['brake'] = control_vec[
+                    i].brake
 
                 rw.writerow(self._dict_rewards)
 
