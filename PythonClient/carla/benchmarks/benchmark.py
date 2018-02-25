@@ -211,7 +211,7 @@ class Benchmark(object):
 
                     time_out = self._calculate_time_out(path_distance)
                     # running the agent
-                    (result, reward_vec, control, control_vec,final_time, remaining_distance) = \
+                    (result, reward_vec, control_vec,final_time, remaining_distance) = \
                         self.run_navigation_episode(
                             agent, carla, time_out, positions[end_point],
                             str(experiment.Conditions.WeatherId) + '_'
