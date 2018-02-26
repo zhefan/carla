@@ -29,7 +29,7 @@ def distance(t1, t2):
 
 class Waypointer(object):
 
-    def __init__(self, config, debug=True):
+    def __init__(self, config, debug=False):
 
         self.debug = debug
 
