@@ -27,13 +27,19 @@ def main():
 
             client.start_episode(player_start)
 
-            # For this start and end point compute the route.
+            # For a given start and end point the planner can compute the route.
             route = planner.compute_route(start_transform, end_transform)
+            # Route is a resulting object that could produce derivate representations
+            # of the resulting route.
 
-            # The route object can be used to get more meaningful objects
-            # such as waypoints or commands
-            route.waypoints()
-            route.commands()
+            # For instance, route can be converted into waypoints, that are future positions
+            # on the road that the agent should go in order to reach the goal. The parameters for this
+            # are the number of waypoints and the distance ( in meters between each waypoints)
+            waypoints = route.waypoints(number_of_waypoints=100, waypoint_spacing=1)
+            # Also the route can be converted into a set of high level commands such as STRAIGHT,
+            # LEFT, RIGHT. For this case we get the next high level command (position 0) that the
+            # agent has to use to be guided to the goal.
+            next_high_level_command = route.commands()[0]
 
 
 
