@@ -7,6 +7,7 @@
 import datetime
 import sys
 
+import numpy as np
 from contextlib import contextmanager
 
 
@@ -66,3 +67,7 @@ else:
         sys.stdout.flush()
         print_over_same_line.last_line_length = line_length
     print_over_same_line.last_line_length = 0
+
+
+def signal(v1, v2):
+    return np.cross(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2)

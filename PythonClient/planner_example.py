@@ -11,18 +11,29 @@ def main():
 
     with make_carla_client('localhost', 2000) as client:
 
+
+
         scene = client.load_settings(CarlaSettings())
+        # Set the number of episodes
+        number_of_episodes = 30
+        for i in range(number_of_episodes):
+            print (scene.player_start_spots)
+            number_of_player_starts = len(scene.player_start_spots)
+            player_start = random.randint(0, max(0, number_of_player_starts - 1))
+            start_transform = scene.player_start_spots[player_start]
+            player_end = random.randint(0, max(0, number_of_player_starts - 1))
+            end_transform = scene.player_start_spots[player_end]
 
-        number_of_player_starts = len(scene.player_start_spots)
-        player_start = random.randint(0, max(0, number_of_player_starts - 1))
 
-        client.start_episode(player_start)
+            client.start_episode(player_start)
 
+            # For this start and end point compute the route.
+            route = planner.compute_route(start_transform, end_transform)
 
-        route = planner.compute_route(start_transform, end_transform)
-
-        route.waypoints()
-        route.commands()
+            # The route object can be used to get more meaningful objects
+            # such as waypoints or commands
+            route.waypoints()
+            route.commands()
 
 
 

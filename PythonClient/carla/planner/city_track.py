@@ -88,10 +88,13 @@ class CityTrack(object):
                                                       node_target, target_ori), node_source,
                          node_target)
 
+
+        print (self._map._grid._structure)
         route = a_star.solve()
 
         # JuSt a Corner Case
         # Clean this to avoid having to use this function
+        # TODO: clean this function
         if route is None:
             a_star = AStar()
             a_star.init_grid(self._map.get_graph_resolution()[0],

@@ -131,6 +131,7 @@ class CarlaMap(object):
 
         final_walls = final_walls.union(self._grid.get_wall_target(
             node_target, target_ori, node_source))
+        print (final_walls)
         return final_walls
 
     def get_walls(self):

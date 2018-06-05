@@ -59,6 +59,8 @@ from carla import image_converter
 from carla import sensor
 from carla.client import make_carla_client, VehicleControl
 from carla.planner.map import CarlaMap
+from carla.planner import Waypointer
+from carla.planner import Planner
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from carla.util import print_over_same_line
@@ -151,6 +153,9 @@ class CarlaGame(object):
         self._map_view = None
         self._position = None
         self._agent_positions = None
+        self._waypointer = None
+        self._planner = None
+        self._waypoints = None
 
     def execute(self):
         """Launch the PyGame."""
@@ -190,10 +195,15 @@ class CarlaGame(object):
         self._carla_settings.randomize_weather()
         scene = self.client.load_settings(self._carla_settings)
         if self._display_map:
-            self._city_name = scene.map_name
+            self._city_name = 'Town01' # scene.map_name
         number_of_player_starts = len(scene.player_start_spots)
         player_start = np.random.randint(number_of_player_starts)
         print('Starting new episode...')
+        player_end = random.randint(0, max(0, number_of_player_starts - 1))
+        self._end_transform = scene.player_start_spots[player_end]
+        # TODO: the waypointer not necesarely needs to be instanced
+        self._waypointer = Waypointer(self._city_name)
+        self._planner = Planner(self._city_name)
         self.client.start_episode(player_start)
         self._timer = Timer()
         self._is_on_reverse = False
@@ -234,6 +244,16 @@ class CarlaGame(object):
             self._timer.lap()
 
         control = self._get_keyboard_control(pygame.key.get_pressed())
+
+        route = self._planner.compute_route(measurements.player_measurements.transform,
+                                            self._end_transform)
+
+
+
+
+        self._waypoints_world, self._waypoints = self._waypointer.graph_to_waypoints(route._route_nodes, smoothed=True)
+        #print (self._waypoints_world, self._waypoints)
+
         # Set the player position
         if self._city_name is not None:
             self._position = self._map.convert_to_pixel([
@@ -241,6 +261,7 @@ class CarlaGame(object):
                 measurements.player_measurements.transform.location.y,
                 measurements.player_measurements.transform.location.z])
             self._agent_positions = measurements.non_player_agents
+
 
         if control is None:
             self._on_new_episode()
@@ -307,6 +328,18 @@ class CarlaGame(object):
             other_lane=100 * player_measurements.intersection_otherlane,
             offroad=100 * player_measurements.intersection_offroad)
         print_over_same_line(message)
+    def _draw_waypoints(self, surface):
+
+        for waypoint in self._waypoints:
+            new_window_width = \
+                (float(WINDOW_HEIGHT) / float(self._map_shape[0])) * \
+                float(self._map_shape[1])
+
+            w_pos = int(waypoint[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
+            h_pos = int(waypoint[1] *(new_window_width/float(self._map_shape[1])))
+
+            pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 3, 0)
+
 
     def _on_render(self):
         gap_x = (WINDOW_WIDTH - 2 * MINI_WINDOW_WIDTH) / 3
@@ -345,7 +378,10 @@ class CarlaGame(object):
             self._display.blit(surface, (10, 10))
 
         if self._map_view is not None:
+
             array = self._map_view
+
+
             array = array[:, :, :3]
 
             new_window_width = \
@@ -356,6 +392,7 @@ class CarlaGame(object):
             w_pos = int(self._position[0]*(float(WINDOW_HEIGHT)/float(self._map_shape[0])))
             h_pos = int(self._position[1] *(new_window_width/float(self._map_shape[1])))
 
+            self._draw_waypoints(surface)
             pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 6, 0)
             for agent in self._agent_positions:
                 if agent.HasField('vehicle'):

@@ -44,7 +44,8 @@ class Grid(object):
     def get_wall_source(self, pos, pos_ori, target):
 
         free_nodes = self._get_adjacent_free_nodes(pos)
-        # print self._walls
+        print (" Adjacent free nodes ")
+        print (free_nodes)
         final_walls = copy.copy(self._walls)
         # print final_walls
         heading_start = np.array([pos_ori[0], pos_ori[1]])

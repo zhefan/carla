@@ -10,6 +10,7 @@ import math
 import numpy as np
 
 from . import city_track
+from .route import Route
 
 
 def compare(x, y):
@@ -20,11 +21,6 @@ def compare(x, y):
 # Constants Used for the high level commands
 
 
-REACH_GOAL = 0.0
-GO_STRAIGHT = 5.0
-TURN_RIGHT = 4.0
-TURN_LEFT = 3.0
-LANE_FOLLOW = 2.0
 
 
 # Auxiliary algebra function
@@ -35,17 +31,46 @@ def angle_between(v1, v2):
 def sldist(c1, c2): return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
 
 
-def signal(v1, v2):
-    return np.cross(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2)
+
 
 
 class Planner(object):
 
     def __init__(self, city_name):
 
+        # TODO: This city track concept in my opinion is a little bit bad. We could refactor
         self._city_track = city_track.CityTrack(city_name)
 
         self._commands = []
+        self._city_name = city_name
+
+
+    def compute_route(self, source_transform, target_tranform):
+
+        # Convert to a neutral format
+        source = (source_transform.location.x, source_transform.location.y, source_transform.location.z)
+        source_ori = (source_transform.orientation.x,
+                      source_transform.orientation.y, source_transform.orientation.z)
+        target = (target_tranform.location.x,
+                  target_tranform.location.y, target_tranform.location.z)
+        target_ori = (target_tranform.orientation.x,
+                      target_tranform.orientation.y, target_tranform.orientation.z)
+
+        track_source = self._city_track.project_node(source)
+        track_target = self._city_track.project_node(target)
+
+        print(track_source)
+        print(track_target)
+        print(source_ori)
+        print(target_ori)
+        route = self._city_track.compute_route(track_source, source_ori,
+                                               track_target, target_ori)
+        if route is None:
+            raise RuntimeError('Impossible to find route')
+
+        return Route(route, self._city_track.get_intersection_nodes(), self._city_name)
+
+
 
     def get_next_command(self, source, source_ori, target, target_ori):
         """
@@ -58,6 +83,7 @@ class Planner(object):
         Returns
             a command ( Straight,Lane Follow, Left or Right)
         """
+
 
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
@@ -138,38 +164,3 @@ class Planner(object):
 
         return self._city_track.is_away_from_intersection(node_source)
 
-    def _route_to_commands(self, route):
-
-        """
-        from the shortest path graph, transform it into a list of commands
-
-        :param route: the sub graph containing the shortest path
-        :return: list of commands encoded from 0-5
-        """
-
-        commands_list = []
-
-        for i in range(0, len(route)):
-            if route[i] not in self._city_track.get_intersection_nodes():
-                continue
-
-            current = route[i]
-            past = route[i - 1]
-            future = route[i + 1]
-
-            past_to_current = np.array(
-                [current[0] - past[0], current[1] - past[1]])
-            current_to_future = np.array(
-                [future[0] - current[0], future[1] - current[1]])
-            angle = signal(current_to_future, past_to_current)
-
-            if angle < -0.1:
-                command = TURN_RIGHT
-            elif angle > 0.1:
-                command = TURN_LEFT
-            else:
-                command = GO_STRAIGHT
-
-            commands_list.append(command)
-
-        return commands_list
