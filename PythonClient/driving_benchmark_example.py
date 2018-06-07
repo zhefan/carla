@@ -38,12 +38,7 @@ if __name__ == '__main__':
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-c', '--city-name',
-        metavar='C',
-        default='Town01',
-        help='The town that is going to be used on benchmark'
-             + '(needs to match active town in server, options: Town01 or Town02)')
+
     argparser.add_argument(
         '-n', '--log_name',
         metavar='T',
@@ -79,14 +74,14 @@ if __name__ == '__main__':
     # We instantiate an experiment suite. Basically a set of experiments
     # that are going to be evaluated on this benchmark.
     if args.corl_2017:
-        experiment_suite = CoRL2017(args.city_name)
+        experiment_suite = CoRL2017()
     else:
         print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
                ' experiment suites, you should run'
                ' python driving_benchmark_example.py --corl-2017')
-        experiment_suite = BasicExperimentSuite(args.city_name)
+        experiment_suite = BasicExperimentSuite()
 
     # Now actually run the driving_benchmark
-    run_driving_benchmark(agent, experiment_suite, args.city_name,
+    run_driving_benchmark(agent, experiment_suite,
                           args.log_name, args.continue_experiment,
                           args.host, args.port)

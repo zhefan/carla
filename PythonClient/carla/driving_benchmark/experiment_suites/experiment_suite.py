@@ -4,9 +4,8 @@ import abc
 
 class ExperimentSuite(object):
 
-    def __init__(self, city_name):
+    def __init__(self):
 
-        self._city_name = city_name
         self._experiments = self.build_experiments()
 
     def calculate_time_out(self, path_distance):
@@ -79,7 +78,13 @@ class ExperimentSuite(object):
     def weathers(self):
         weathers = set(self.train_weathers)
         weathers.update(self.test_weathers)
-        return weathers
+        return list(weathers)
+
+    @property
+    def towns(self):
+        towns = set(self.train_towns)
+        towns.update(self.test_towns)
+        return list(towns)
 
     @abc.abstractmethod
     def build_experiments(self):
@@ -97,6 +102,17 @@ class ExperimentSuite(object):
 
     @abc.abstractproperty
     def test_weathers(self):
+        """
+        Return the weathers that are considered as testing conditions
+        """
+    @abc.abstractproperty
+    def train_towns(self):
+        """
+        Return the weathers that are considered as training conditions
+        """
+
+    @abc.abstractproperty
+    def test_towns(self):
         """
         Return the weathers that are considered as testing conditions
         """

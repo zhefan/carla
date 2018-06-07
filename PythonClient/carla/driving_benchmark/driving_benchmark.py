@@ -37,7 +37,6 @@ class DrivingBenchmark(object):
 
     def __init__(
             self,
-            city_name='Town01',
             name_to_save='Test',
             continue_experiment=False,
             save_images=False,
@@ -46,7 +45,6 @@ class DrivingBenchmark(object):
 
         self.__metaclass__ = abc.ABCMeta
 
-        self._city_name = city_name
         self._base_name = name_to_save
         # The minimum distance for arriving into the goal point in
         # order to consider ir a success
@@ -57,8 +55,7 @@ class DrivingBenchmark(object):
                                     save_images=save_images
                                     )
 
-        # We have a default planner instantiated that produces high level commands
-        self._planner = Planner(city_name)
+
 
     def benchmark_agent(self, experiment_suite, agent, client):
         """
@@ -96,6 +93,10 @@ class DrivingBenchmark(object):
 
             self._recording.log_start(experiment.task)
 
+            # We have a default planner instantiated that produces high level commands
+
+            planner = Planner(experiment.conditions.MapName)
+
             for pose in experiment.poses[start_pose:]:
                 for rep in range(experiment.repetitions):
 
@@ -118,7 +119,7 @@ class DrivingBenchmark(object):
                             [positions[end_index].location.x, positions[end_index].location.y])
 
                     time_out = experiment_suite.calculate_time_out(
-                        self._get_shortest_path(positions[start_index], positions[end_index]))
+                        self._get_shortest_path(planner, positions[start_index], positions[end_index]))
 
                     # running the agent
                     (result, reward_vec, control_vec, final_time, remaining_distance) = \
@@ -126,7 +127,7 @@ class DrivingBenchmark(object):
                             agent, client, time_out, positions[end_index],
                             str(experiment.Conditions.WeatherId) + '_'
                             + str(experiment.task) + '_' + str(start_index)
-                            + '.' + str(end_index))
+                            + '.' + str(end_index), planner)
 
                     # Write the general status of the just ran episode
                     self._recording.write_summary_results(
@@ -154,12 +155,12 @@ class DrivingBenchmark(object):
         """
         return self._recording.path
 
-    def _get_directions(self, current_point, end_point):
+    def _get_directions(self, planner, current_point, end_point):
         """
-        Class that should return the directions to reach a certain goal
+        Function that should return the directions to reach a certain goal
         """
 
-        directions = self._planner.get_next_command(
+        directions = planner.get_next_command(
             (current_point.location.x,
              current_point.location.y, 0.22),
             (current_point.orientation.x,
@@ -169,12 +170,12 @@ class DrivingBenchmark(object):
             (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
         return directions
 
-    def _get_shortest_path(self, start_point, end_point):
+    def _get_shortest_path(self, planner, start_point, end_point):
         """
         Calculates the shortest path between two points considering the road netowrk
         """
 
-        return self._planner.get_shortest_path_distance(
+        return planner.get_shortest_path_distance(
             [
                 start_point.location.x, start_point.location.y, 0.22], [
                 start_point.orientation.x, start_point.orientation.y, 0.22], [
@@ -187,7 +188,8 @@ class DrivingBenchmark(object):
             client,
             time_out,
             target,
-            episode_name):
+            episode_name,
+            planner):
         """
          Run one episode of the benchmark (Pose) for a certain agent.
 
@@ -199,6 +201,7 @@ class DrivingBenchmark(object):
             time_out: the time limit to complete this episode
             target: the target to reach
             episode_name: The name for saving images of this episode
+            planner: planner used for these specific configurations
 
         """
 
@@ -222,7 +225,8 @@ class DrivingBenchmark(object):
             # Read data from server with the client
             measurements, sensor_data = client.read_data()
             # The directions to reach the goal are calculated.
-            directions = self._get_directions(measurements.player_measurements.transform, target)
+            directions = self._get_directions(planner,
+                                              measurements.player_measurements.transform, target)
             # Agent process the data.
             control = agent.run_step(measurements, sensor_data, directions, target)
             # Send the control commands to the vehicle
@@ -265,7 +269,6 @@ class DrivingBenchmark(object):
 
 def run_driving_benchmark(agent,
                           experiment_suite,
-                          city_name='Town01',
                           log_name='Test',
                           continue_experiment=False,
                           host='127.0.0.1',
@@ -283,10 +286,8 @@ def run_driving_benchmark(agent,
                 # We instantiate the driving benchmark, that is the engine used to
                 # benchmark an agent. The instantiation starts the log process, sets
 
-                benchmark = DrivingBenchmark(city_name=city_name,
-                                             name_to_save=log_name + '_'
-                                                          + type(experiment_suite).__name__
-                                                          + '_' + city_name,
+                benchmark = DrivingBenchmark(name_to_save=log_name + '_'
+                                                          + type(experiment_suite).__name__,
                                              continue_experiment=continue_experiment)
                 # This function performs the benchmark. It returns a dictionary summarizing
                 # the entire execution.
