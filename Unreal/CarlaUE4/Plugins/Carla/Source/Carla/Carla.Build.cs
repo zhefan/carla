@@ -39,7 +39,8 @@ public class Carla : ModuleRules
         "Slate",
         "SlateCore",
         "Landscape",
-        "Foliage"
+        "Foliage",
+        "FunctionalTesting"
         // ... add private dependencies that you statically link with here ...
       }
       );
