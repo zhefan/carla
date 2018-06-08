@@ -74,14 +74,14 @@ if __name__ == '__main__':
     # We instantiate an experiment suite. Basically a set of experiments
     # that are going to be evaluated on this benchmark.
     if args.corl_2017:
-        experiment_suite = CoRL2017()
+        experiment_set = build_corl2017()
     else:
         print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
                ' experiment suites, you should run'
                ' python driving_benchmark_example.py --corl-2017')
-        experiment_suite = BasicExperimentSuite()
+        experiment_set = build_basic_set()
 
     # Now actually run the driving_benchmark
-    run_driving_benchmark(agent, experiment_suite,
+    run_driving_benchmark(agent, experiment_set,
                           args.log_name, args.continue_experiment,
                           args.host, args.port)
