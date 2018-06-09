@@ -1,30 +1,63 @@
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
-# CORL experiment set.
-
 from __future__ import print_function
 
 from carla.driving_benchmark.experiment import Experiment
 from carla.sensor import Camera
 from carla.settings import CarlaSettings
-from carla.driving_benchmark.experiment_suites.experiment_suite import ExperimentSuite
+
+def calculate_time_out(path_distance):
+    """
+    Function to return the timeout ,in milliseconds,
+    that is calculated based on distance to goal.
+    This is the same timeout as used on the CoRL paper.
+    """
+
+    return ((path_distance / 1000.0) / 10.0) * 3600.0 + 10.0
+
+def get_dynamic_tasks(experiment_set):
+    """
+    Returns the episodes that contain dynamic obstacles
+    """
+    dynamic_tasks = set()
+    for exp in experiment_set:
+        if exp.conditions.NumberOfVehicles > 0 or exp.conditions.NumberOfPedestrians > 0:
+            dynamic_tasks.add(exp.task)
+
+    return list(dynamic_tasks)
+
+def build_basic_set():
+    # We check the town, based on that we define the town related parameters
+    # The size of the vector is related to the number of tasks, inside each
+    # task there is also multiple poses ( start end, positions )
+
+    exp_set_dict = {
+        'Town01': {'poses': [[[7, 3]], [[138, 17]], [[140, 134]], [[140, 134]]],
+                   'vehicles': [0, 0, 0, 20],
+                   'pedestrians': [0, 0, 0, 50],
+                   'weathers': [1]
+
+                   },
+        'Town02': {'poses': [[[4, 2]], [[37, 76]], [[19, 66]], [[19, 66]]],
+                   'vehicles': [0, 0, 0, 15],
+                   'pedestrians': [0, 0, 0, 50],
+                   'weathers': [1]
+
+                   }
+    }
+
+    # We set the camera
+    # This single RGB camera is used on every experiment
+    camera = Camera('CameraRGB')
+    camera.set(FOV=100)
+    camera.set_image_size(800, 600)
+    camera.set_position(2.0, 0.0, 1.4)
+    camera.set_rotation(-15.0, 0, 0)
+    sensor_set = [camera]
+
+    return _build_experiments(exp_set_dict, sensor_set)
 
 
-class CoRL2017(ExperimentSuite):
-
-    @property
-    def train_weathers(self):
-        return [1, 3, 6, 8]
-
-    @property
-    def test_weathers(self):
-        return [4, 14]
-
-    def _poses_town01(self):
+def build_corl2017_set():
+    def _poses_town01():
         """
         Each matrix is a new task. We have all the four tasks
 
@@ -56,8 +89,7 @@ class CoRL2017(ExperimentSuite):
                 _poses_navigation(),
                 _poses_navigation()]
 
-    def _poses_town02(self):
-
+    def _poses_town02():
         def _poses_straight():
             return [[38, 34], [4, 2], [12, 10], [62, 55], [43, 47],
                     [64, 66], [78, 76], [59, 57], [61, 18], [35, 39],
@@ -86,35 +118,52 @@ class CoRL2017(ExperimentSuite):
                 _poses_navigation()
                 ]
 
-    def build_experiments(self):
-        """
+    # We check the town, based on that we define the town related parameters
+    # The size of the vector is related to the number of tasks, inside each
+    # task there is also multiple poses ( start end, positions )
+
+    exp_set_dict = {
+        'Town01': {'poses': _poses_town01(),
+                   'vehicles': [0, 0, 0, 20],
+                   'pedestrians': [0, 0, 0, 50],
+                   'weathers': [1]
+
+                   },
+        'Town02': {'poses': _poses_town02(),
+                   'vehicles': [0, 0, 0, 15],
+                   'pedestrians': [0, 0, 0, 50],
+                   'weathers': [1]
+
+                   }
+    }
+
+    # We set the camera
+    # This single RGB camera is used on every experiment
+    camera = Camera('CameraRGB')
+    camera.set(FOV=100)
+    camera.set_image_size(800, 600)
+    camera.set_position(2.0, 0.0, 1.4)
+    camera.set_rotation(-15.0, 0, 0)
+    sensor_set = [camera]
+
+    return _build_experiments(exp_set_dict, sensor_set)
+
+
+def _build_experiments(configuration_dict, sensor_set):
+    """
         Creates the whole set of experiment objects,
-        The experiments created depend on the selected Town.
+        The experiments created depends on the configuration dict
 
+    """
 
-        """
-
-        # We set the camera
-        # This single RGB camera is used on every experiment
-
-        camera = Camera('CameraRGB')
-        camera.set(FOV=100)
-        camera.set_image_size(800, 600)
-        camera.set_position(2.0, 0.0, 1.4)
-        camera.set_rotation(-15.0, 0, 0)
-
-        if self._city_name == 'Town01':
-            poses_tasks = self._poses_town01()
-            vehicles_tasks = [0, 0, 0, 20]
-            pedestrians_tasks = [0, 0, 0, 50]
-        else:
-            poses_tasks = self._poses_town02()
-            vehicles_tasks = [0, 0, 0, 15]
-            pedestrians_tasks = [0, 0, 0, 50]
-
-        experiments_vector = []
-
-        for weather in self.weathers:
+    # Based on the parameters, creates a vector with experiment objects.
+    experiments_vector = []
+    for town, configs in configuration_dict.items():
+        weather_set = configs['weathers']
+        poses_tasks = configs['poses']
+        vehicles_tasks = configs['vehicles']
+        pedestrians_tasks = configs['pedestrians']
+        for weather in weather_set:
 
             for iteration in range(len(poses_tasks)):
                 poses = poses_tasks[iteration]
@@ -126,11 +175,13 @@ class CoRL2017(ExperimentSuite):
                     SendNonPlayerAgentsInfo=True,
                     NumberOfVehicles=vehicles,
                     NumberOfPedestrians=pedestrians,
+                    MapName=town,
                     WeatherId=weather
                 )
                 # Add all the cameras that were set for this experiments
 
-                conditions.add_sensor(camera)
+                for camera in sensor_set:
+                    conditions.add_sensor(camera)
 
                 experiment = Experiment()
                 experiment.set(
@@ -141,4 +192,4 @@ class CoRL2017(ExperimentSuite):
                 )
                 experiments_vector.append(experiment)
 
-        return experiments_vector
+    return experiments_vector

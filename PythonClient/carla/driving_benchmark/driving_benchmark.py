@@ -19,7 +19,7 @@ from carla.tcp import TCPConnectionError
 
 from . import results_printer
 from .recording import Recording
-
+from .experiment_sets import get_dynamic_tasks, calculate_time_out
 
 def sldist(c1, c2):
     return math.sqrt((c2[0] - c1[0]) ** 2 + (c2[1] - c1[1]) ** 2)
@@ -55,9 +55,34 @@ class DrivingBenchmark(object):
                                     save_images=save_images
                                     )
 
+        self.metrics_parameters = {
+
+            'intersection_offroad': {'frames_skip': 10,
+                                     'frames_recount': 20,
+                                     'threshold': 0.3
+                                     },
+            'intersection_otherlane': {'frames_skip': 10,
+                                       'frames_recount': 20,
+                                       'threshold': 0.4
+                                       },
+            'collision_other': {'frames_skip': 10,
+                                'frames_recount': 20,
+                                'threshold': 400
+                                },
+            'collision_vehicles': {'frames_skip': 10,
+                                   'frames_recount': 30,
+                                   'threshold': 400
+                                   },
+            'collision_pedestrians': {'frames_skip': 5,
+                                      'frames_recount': 100,
+                                      'threshold': 300
+                                      },
+
+        }
 
 
-    def benchmark_agent(self, experiment_suite, agent, client):
+
+    def benchmark_agent(self, experiment_set, agent, client):
         """
         Function to benchmark the agent.
         It first check the log file for this benchmark.
@@ -65,7 +90,7 @@ class DrivingBenchmark(object):
 
 
         Args:
-            experiment_suite
+            experiment_set
             agent: an agent object with the run step class implemented.
             client:
 
@@ -77,21 +102,23 @@ class DrivingBenchmark(object):
 
         # Instantiate a metric object that will be used to compute the metrics for
         # the benchmark afterwards.
-        metrics_object = Metrics(experiment_suite.metrics_parameters,
-                                 experiment_suite.dynamic_tasks)
+        metrics_object = Metrics(self.metrics_parameters,
+                                 get_dynamic_tasks(experiment_set))
 
         # Function return the current pose and task for this benchmark.
         start_pose, start_experiment = self._recording.get_pose_and_experiment(
-            experiment_suite.get_number_of_poses_task())
+            len(experiment_set[0].poses))
 
         logging.info('START')
 
-        for experiment in experiment_suite.get_experiments()[int(start_experiment):]:
+        for experiment in experiment_set[int(start_experiment):]:
 
             positions = client.load_settings(
                 experiment.conditions).player_start_spots
 
             self._recording.log_start(experiment.task)
+            print ("Started on map:", experiment.conditions.MapName)
+
 
             # We have a default planner instantiated that produces high level commands
 
@@ -102,6 +129,7 @@ class DrivingBenchmark(object):
 
                     start_index = pose[0]
                     end_index = pose[1]
+
 
                     client.start_episode(start_index)
                     # Print information on
@@ -118,7 +146,7 @@ class DrivingBenchmark(object):
                             [positions[start_index].location.x, positions[start_index].location.y],
                             [positions[end_index].location.x, positions[end_index].location.y])
 
-                    time_out = experiment_suite.calculate_time_out(
+                    time_out = calculate_time_out(
                         self._get_shortest_path(planner, positions[start_index], positions[end_index]))
 
                     # running the agent
@@ -168,6 +196,7 @@ class DrivingBenchmark(object):
              current_point.orientation.z),
             (end_point.location.x, end_point.location.y, 0.22),
             (end_point.orientation.x, end_point.orientation.y, end_point.orientation.z))
+
         return directions
 
     def _get_shortest_path(self, planner, start_point, end_point):

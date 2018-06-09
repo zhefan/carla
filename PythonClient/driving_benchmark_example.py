@@ -10,8 +10,8 @@ import argparse
 import logging
 
 from carla.driving_benchmark import run_driving_benchmark
-from carla.driving_benchmark.experiment_suites import CoRL2017
-from carla.driving_benchmark.experiment_suites import BasicExperimentSuite
+from carla.driving_benchmark.experiment_sets import build_corl2017_set
+from carla.driving_benchmark.experiment_sets import build_basic_set
 from carla.agent import ForwardAgent
 
 if __name__ == '__main__':
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     # We instantiate an experiment suite. Basically a set of experiments
     # that are going to be evaluated on this benchmark.
     if args.corl_2017:
-        experiment_set = build_corl2017()
+        experiment_set = build_corl2017_set()
     else:
         print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
                ' experiment suites, you should run'
