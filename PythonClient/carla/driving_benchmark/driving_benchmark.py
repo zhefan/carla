@@ -201,15 +201,14 @@ class DrivingBenchmark(object):
 
     def _get_shortest_path(self, planner, start_point, end_point):
         """
-        Calculates the shortest path between two points considering the road netowrk
+        Calculates the shortest path between two points considering the road network
         """
 
         return planner.get_shortest_path_distance(
-            [
-                start_point.location.x, start_point.location.y, 0.22], [
-                start_point.orientation.x, start_point.orientation.y, 0.22], [
-                end_point.location.x, end_point.location.y, end_point.location.z], [
-                end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
+                [start_point.location.x, start_point.location.y, 0.22],
+                [start_point.orientation.x, start_point.orientation.y, start_point.orientation.z],
+                [end_point.location.x, end_point.location.y, end_point.location.z],
+                [end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
 
     def _run_navigation_episode(
             self,
@@ -298,6 +297,7 @@ class DrivingBenchmark(object):
 
 def run_driving_benchmark(agent,
                           experiment_suite,
+                          experiment_suit_conf,
                           log_name='Test',
                           continue_experiment=False,
                           host='127.0.0.1',
@@ -316,7 +316,7 @@ def run_driving_benchmark(agent,
                 # benchmark an agent. The instantiation starts the log process, sets
 
                 benchmark = DrivingBenchmark(name_to_save=log_name + '_'
-                                                          + type(experiment_suite).__name__,
+                                                          + experiment_suit_conf['Name'],
                                              continue_experiment=continue_experiment)
                 # This function performs the benchmark. It returns a dictionary summarizing
                 # the entire execution.
@@ -328,7 +328,7 @@ def run_driving_benchmark(agent,
                 print("----- Printing results for training weathers (Seen in Training) -----")
                 print("")
                 print("")
-                results_printer.print_summary(benchmark_summary, experiment_suite.train_weathers,
+                results_printer.print_summary(benchmark_summary, experiment_suit_conf['Town01']['weathers_train'],
                                               benchmark.get_path())
 
                 print("")
@@ -337,7 +337,7 @@ def run_driving_benchmark(agent,
                 print("")
                 print("")
 
-                results_printer.print_summary(benchmark_summary, experiment_suite.test_weathers,
+                results_printer.print_summary(benchmark_summary, experiment_suit_conf['Town01']['weathers_validation'],
                                               benchmark.get_path())
 
                 break

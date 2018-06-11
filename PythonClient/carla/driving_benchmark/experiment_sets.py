@@ -24,24 +24,30 @@ def get_dynamic_tasks(experiment_set):
 
     return list(dynamic_tasks)
 
+
+
 def build_basic_set():
     # We check the town, based on that we define the town related parameters
     # The size of the vector is related to the number of tasks, inside each
     # task there is also multiple poses ( start end, positions )
 
     exp_set_dict = {
-        'Town01': {'poses': [[[7, 3]], [[138, 17]], [[140, 134]], [[140, 134]]],
-                   'vehicles': [0, 0, 0, 20],
-                   'pedestrians': [0, 0, 0, 50],
-                   'weathers': [1]
-
-                   },
+        'Name': 'BasicExperimentSet',
         'Town02': {'poses': [[[4, 2]], [[37, 76]], [[19, 66]], [[19, 66]]],
                    'vehicles': [0, 0, 0, 15],
                    'pedestrians': [0, 0, 0, 50],
-                   'weathers': [1]
+                   'weathers_train': [1],
+                   'weathers_validation': [1]
+
+                   },
+        'Town01': {'poses': [[[7, 3]], [[138, 17]], [[140, 134]], [[140, 134]]],
+                   'vehicles': [0, 0, 0, 20],
+                   'pedestrians': [0, 0, 0, 50],
+                   'weathers_train': [1],
+                   'weathers_validation': [1]
 
                    }
+
     }
 
     # We set the camera
@@ -53,7 +59,7 @@ def build_basic_set():
     camera.set_rotation(-15.0, 0, 0)
     sensor_set = [camera]
 
-    return _build_experiments(exp_set_dict, sensor_set)
+    return _build_experiments(exp_set_dict, sensor_set), exp_set_dict
 
 
 def build_corl2017_set():
@@ -123,16 +129,19 @@ def build_corl2017_set():
     # task there is also multiple poses ( start end, positions )
 
     exp_set_dict = {
+        'Name': 'CoRL2017ExperimentSet',
         'Town01': {'poses': _poses_town01(),
                    'vehicles': [0, 0, 0, 20],
                    'pedestrians': [0, 0, 0, 50],
-                   'weathers': [1]
+                   'weathers_train': [1, 3, 6, 8],
+                   'weathers_validation': [4, 14]
 
                    },
         'Town02': {'poses': _poses_town02(),
                    'vehicles': [0, 0, 0, 15],
                    'pedestrians': [0, 0, 0, 50],
-                   'weathers': [1]
+                   'weathers_train': [1, 3, 6, 8],
+                   'weathers_validation': [4, 14]
 
                    }
     }
@@ -146,7 +155,7 @@ def build_corl2017_set():
     camera.set_rotation(-15.0, 0, 0)
     sensor_set = [camera]
 
-    return _build_experiments(exp_set_dict, sensor_set)
+    return _build_experiments(exp_set_dict, sensor_set), exp_set_dict
 
 
 def _build_experiments(configuration_dict, sensor_set):
@@ -158,8 +167,14 @@ def _build_experiments(configuration_dict, sensor_set):
 
     # Based on the parameters, creates a vector with experiment objects.
     experiments_vector = []
+    print(configuration_dict)
     for town, configs in configuration_dict.items():
-        weather_set = configs['weathers']
+        if town != 'Town01' and town != 'Town02':
+            continue
+        weather_set = set(configs['weathers_train'])
+        weather_set.update(configs['weathers_validation'])
+        weather_set = list(weather_set)
+
         poses_tasks = configs['poses']
         vehicles_tasks = configs['vehicles']
         pedestrians_tasks = configs['pedestrians']

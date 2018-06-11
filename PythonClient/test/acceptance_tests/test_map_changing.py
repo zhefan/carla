@@ -19,10 +19,6 @@ from carla.util import print_over_same_line
 
 from carla.tcp import TCPConnectionError
 
-from carla.driving_benchmark.experiment_sets.basic_experiment_suite import BasicExperimentSuite
-
-from carla.driving_benchmark.experiment_sets.corl_2017 import CoRL2017
-
 
 def print_measurements(measurements):
     number_of_agents = len(measurements.non_player_agents)
