@@ -271,7 +271,6 @@ class Metrics(object):
                     np.logical_and(result_matrix[:, header.index(
                         'exp_id')] == tasks[t], result_matrix[:, header.index('weather')] == w)]
 
-
                 experiment_metrics_matrix = measurements_matrix[
                     np.logical_and(measurements_matrix[:, header_metrics.index(
                         'exp_id')] == float(tasks[t]),
