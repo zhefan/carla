@@ -47,7 +47,7 @@ from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from game.carla_game import CarlaGame
 from carla.planner import Planner, Waypointer
-from carla.agent import HumanAgent, ForwardAgent
+from carla.agent import HumanAgent, ForwardAgent, CommandFollower, LaneFollower
 
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
@@ -109,7 +109,10 @@ def make_controlling_agent(args):
     elif args.controlling_agent == "HumanAgent":
         # TDNextPR: Add parameters such as joysticks to the human agent.
         return HumanAgent()
-
+    elif args.controlling_agent == "CommandFollower":
+        return CommandFollower()
+    elif args.controlling_agent == 'LaneFollower':
+        return LaneFollower()
     else:
         raise ValueError("Selected Agent Does not exist")
 
@@ -135,7 +138,7 @@ def get_directions(measurements, target_transform, planner, waypointer):
          target_transform.orientation.z)
     )
 
-    _, waypoints = waypointer.get_next_waypoints(
+    waypoints_world, waypoints = waypointer.get_next_waypoints(
         (current_point.location.x,
          current_point.location.y, 0.22),
         (current_point.orientation.x, current_point.orientation.y,
@@ -147,7 +150,7 @@ def get_directions(measurements, target_transform, planner, waypointer):
     if waypoints == []:
         waypoints = [[current_point.location.x, current_point.location.y, 0.22]]
 
-    return directions, waypoints
+    return directions, waypoints, waypoints_world
 
 
 def new_episode(client, carla_settings):
@@ -214,7 +217,7 @@ def execute(client, args):
         #TD: this will become a neutral route object that can be transformed after to the
         #TD: format needed by the agent.
 
-        _, waypoints = get_directions(measurements, player_target_transform,
+        _, waypoints, waypoints_world = get_directions(measurements, player_target_transform,
                                                planner, waypointer)
 
         #TD 0.9: This is going to be a vector of controls for each agent.
@@ -222,17 +225,16 @@ def execute(client, args):
 
         # run a step for the agent. regardless of the type
         control = controlling_agent.run_step(measurements, sensor_data,
-                                             waypoints,
+                                             waypoints_world,
                                              player_target_transform)
 
         # Set the player position
         if args.map:
             position = measurements.player_measurements.transform.location
-
             agents_positions = measurements.non_player_agents
             # Render with the provided map
             carla_game.render(sensor_data, player_position=position,
-                              waypoints=None, agents_positions=agents_positions)
+                              waypoints=waypoints, agents_positions=agents_positions)
         else:
             #  For this case we don't need to plot the position
             carla_game.render(sensor_data)
@@ -296,7 +298,9 @@ def main():
         help='the controller that is going to be used by the main vehicle.'
              ' Options: '
              ' HumanAgent - Control your agent with a keyboard.'
-             ' ForwardAgent - A trivial agent that goes forward')
+             ' ForwardAgent - A trivial agent that goes forward'
+             ' LaneFollower - An agent that follow lanes and stop obstacles'
+             ' CommandFolower - A lane follower agent that follow commands from the planner')
     args = argparser.parse_args()
 
     log_level = logging.DEBUG if args.debug else logging.INFO
