@@ -18,10 +18,9 @@ class Controller(object):
 
         # Strength for applying brake - Value between 0 and 1
         self.brake_strength = 1
-        # Factor to control coasting
-        self.coast_factor = 2
+
         # PID speed controller
-        self.pid = PID(p=0.25, i=0.08, d=0)
+        self.pid = PID(p=0.20, i=0.08, d=0)
         # Target speed - could be controlled by speed limit
         self.target_speed = 35
         # Maximum throttle
@@ -51,8 +50,8 @@ class Controller(object):
 
             self.pid.target = target_speed_adjusted
             pid_gain = self.pid(feedback=current_speed)
-            # print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
-            # print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
+            #print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
+            #print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
             #       speed_factor)
 
             self.throttle = min(max(self.throttle - 0.25 * pid_gain, 0), self.throttle_max)
