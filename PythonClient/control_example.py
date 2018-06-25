@@ -46,7 +46,7 @@ from carla.client import make_carla_client
 from carla.settings import CarlaSettings
 from carla.tcp import TCPConnectionError
 from game.carla_game import CarlaGame
-from carla.planner import Planner, Waypointer
+from carla.planner import Planner
 from carla.agent import HumanAgent, ForwardAgent, CommandFollower, LaneFollower
 
 WINDOW_WIDTH = 800
@@ -96,7 +96,7 @@ def make_carla_settings(args):
     return settings
 
 
-def make_controlling_agent(args):
+def make_controlling_agent(args, town_name):
     """ Make the controlling agent object depending on what was selected.
         Right now we have the following options:
         Forward Agent: A trivial agent that just accelerate forward.
@@ -110,14 +110,14 @@ def make_controlling_agent(args):
         # TDNextPR: Add parameters such as joysticks to the human agent.
         return HumanAgent()
     elif args.controlling_agent == "CommandFollower":
-        return CommandFollower()
+        return CommandFollower(town_name)
     elif args.controlling_agent == 'LaneFollower':
-        return LaneFollower()
+        return LaneFollower(town_name)
     else:
         raise ValueError("Selected Agent Does not exist")
 
 
-def get_directions(measurements, target_transform, planner, waypointer):
+def get_directions(measurements, target_transform, planner):
     """ Function to get the high level commands and the waypoints.
         The waypoints correspond to the local planning, the near path the car has to follow.
     """
@@ -138,19 +138,9 @@ def get_directions(measurements, target_transform, planner, waypointer):
          target_transform.orientation.z)
     )
 
-    waypoints_world, waypoints = waypointer.get_next_waypoints(
-        (current_point.location.x,
-         current_point.location.y, 0.22),
-        (current_point.orientation.x, current_point.orientation.y,
-         current_point.orientation.z),
-        (target_transform.location.x, target_transform.location.y, target_transform.location.z),
-        (target_transform.orientation.x, target_transform.orientation.y,
-         target_transform.orientation.z)
-    )
-    if waypoints == []:
-        waypoints = [[current_point.location.x, current_point.location.y, 0.22]]
 
-    return directions, waypoints, waypoints_world
+
+    return directions
 
 
 def new_episode(client, carla_settings):
@@ -189,21 +179,21 @@ def execute(client, args):
     Returns:
 
     """
-
     # Here we instantiate a sample carla settings, for now it is hardcoded on having a rgb a
     # a depth and a semantic segmentation image. If parameter is send there can also be a lidar.
-    controlling_agent = make_controlling_agent(args)
     carla_settings = make_carla_settings(args)
 
     # Start a new episode and create the planner object. Also create a waypointer to generate
     # trajectories.
-    player_target_transform, map_name = new_episode(client, carla_settings)
-    planner = Planner(map_name)
-    waypointer = Waypointer(map_name)
+    player_target_transform, town_name = new_episode(client, carla_settings)
+    planner = Planner(town_name)
+
+    # We instanciate the agent
+    controlling_agent = make_controlling_agent(args, town_name)
 
     # Py game goes inside the HUD
     carla_game = CarlaGame(args, WINDOW_WIDTH, WINDOW_HEIGHT, MINI_WINDOW_WIDTH, MINI_WINDOW_HEIGHT)
-    carla_game.initialize_game(map_name)
+    carla_game.initialize_game(town_name)
     carla_game.start_timer()
     carla_game.set_objective(player_target_transform)
 
@@ -217,24 +207,22 @@ def execute(client, args):
         #TD: this will become a neutral route object that can be transformed after to the
         #TD: format needed by the agent.
 
-        _, waypoints, waypoints_world = get_directions(measurements, player_target_transform,
-                                               planner, waypointer)
+        directions = get_directions(measurements, player_target_transform,
+                                               planner)
 
         #TD 0.9: This is going to be a vector of controls for each agent.
         #TD 0.9: We should select something like the viewport agent.
 
         # run a step for the agent. regardless of the type
-        control = controlling_agent.run_step(measurements, sensor_data,
-                                             waypoints_world,
+        control = controlling_agent.run_step(measurements, sensor_data, directions,
                                              player_target_transform)
-
         # Set the player position
         if args.map:
             position = measurements.player_measurements.transform.location
             agents_positions = measurements.non_player_agents
             # Render with the provided map
             carla_game.render(sensor_data, player_position=position,
-                              waypoints=waypoints, agents_positions=agents_positions)
+                              waypoints=None, agents_positions=agents_positions)
         else:
             #  For this case we don't need to plot the position
             carla_game.render(sensor_data)

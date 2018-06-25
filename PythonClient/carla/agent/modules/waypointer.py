@@ -30,8 +30,8 @@ class Waypointer(object):
 
         # Open the necessary files
         dir_path = os.path.dirname(__file__)
-        self.city_file = os.path.join(dir_path, city_name + '.txt')
-        self.city_map_file = os.path.join(dir_path, city_name + '.png')
+        self.city_file = os.path.join(dir_path, '../../planner', city_name + '.txt')
+        self.city_map_file = os.path.join(dir_path, '../../planner', city_name + '.png')
         self.city_name = city_name
 
         # Define the specif parameter for the waypointer. Where is the middle of the road,
@@ -278,7 +278,7 @@ class Waypointer(object):
 
     def add_extra_points(self, node_target, target_ori, node_source):
         """
-            Hacky: Add extra points after the target
+            Hacky: Add extra points after the target. The route needs to
 
 
         """
@@ -306,6 +306,9 @@ class Waypointer(object):
 
             self._route.append(direction)
 
+
+
+
     def get_next_waypoints(self, source, source_ori, target, target_ori):
 
         """
@@ -322,6 +325,7 @@ class Waypointer(object):
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
 
+        """
         if math.fabs(target_ori[0]) > math.fabs(target_ori[1]):
             target_ori = (target_ori[0], 0.0, 0.0)
         else:
@@ -331,8 +335,9 @@ class Waypointer(object):
             source_ori = (source_ori[0], 0.0, 0.0)
         else:
             source_ori = (0.0, source_ori[1], 0.0)
+        """
 
-        # reach the goal
+        # Test if it is already at the goal
         if track_source == track_target:
             return self.last_trajectory, self.last_map_points
 
@@ -350,14 +355,16 @@ class Waypointer(object):
             # print self._route
 
             # IF needed we add points after the objective, that is very hacky.
+            # TODO: this go inside the extra points
             self.add_extra_points(track_target, target_ori, track_source)
 
             self.points = self.graph_to_waypoints(
                 self._route[1:(1 + self.way_key_points_predicted)])
+
             self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                 [np.array(self._converter.convert_to_pixel(source))] + self.points)
 
-            return self.last_trajectory, self.last_map_points  # self.generate_final_trajectory([np.array(self.make_map_world(source))] +self.points)
+            return self.last_trajectory, self.last_map_points
 
 
         else:
