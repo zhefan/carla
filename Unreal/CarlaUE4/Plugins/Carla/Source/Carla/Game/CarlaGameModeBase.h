@@ -12,6 +12,7 @@
 #include "Game/CarlaGameControllerBase.h"
 #include "Game/CarlaGameInstance.h"
 #include "Game/MockGameControllerSettings.h"
+#include "Game/ReplaySystemDataRouter.h"
 #include "Vehicle/VehicleSpawnerBase.h"
 #include "Walker/WalkerSpawnerBase.h"
 
@@ -46,6 +47,11 @@ public:
   {
     check(GameInstance != nullptr);
     return GameInstance->GetDataRouter();
+  }
+
+  FReplaySystemDataRouter &GetReplaySystemDataRoute()
+  {
+	  return ReplaySystemDataRoute;
   }
 
   UFUNCTION(BlueprintPure, Category="CARLA Settings")
@@ -110,4 +116,6 @@ private:
 
   UPROPERTY()
   AWalkerSpawnerBase *WalkerSpawner;
+
+  FReplaySystemDataRouter ReplaySystemDataRoute;
 };
