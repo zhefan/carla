@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Agent/AgentComponent.h"
+#include "Agent/ReplayLoggerAgentComponent.h"
 
 #include "GameFramework/Character.h"
 
@@ -15,7 +15,7 @@
 /// This component can be added to any ACharacter to be added as agent.
 /// See UAgentComponent.
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class CARLA_API UWalkerAgentComponent : public UAgentComponent
+class CARLA_API UWalkerAgentComponent : public UReplayLoggerAgentComponent
 {
   GENERATED_BODY()
 

@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "Agent/AgentComponent.h"
+#include "Agent/ReplayLoggerAgentComponent.h"
 
 #include "Vehicle/CarlaWheeledVehicle.h"
 
 #include "VehicleAgentComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class CARLA_API UVehicleAgentComponent : public UAgentComponent
+class CARLA_API UVehicleAgentComponent : public UReplayLoggerAgentComponent
 {
   GENERATED_BODY()
 

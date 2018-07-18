@@ -41,19 +41,19 @@ void UReplayLoggerAgentComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (bRegisterAgentComponent)
+	if (bRegisterReplayLoggerAgentComponent)
 	{
 		GetReplaySystemDataRouter(GetWorld()).RegisterAgent(this);
-		bAgentComponentIsRegistered = true;
+		bAgentReplayLoggerComponentIsRegistered = true;
 	}
 }
 
 void UReplayLoggerAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (bAgentComponentIsRegistered)
+	if (bAgentReplayLoggerComponentIsRegistered)
 	{
 		GetReplaySystemDataRouter(GetWorld()).DeregisterAgent(this);
-		bAgentComponentIsRegistered = false;
+		bAgentReplayLoggerComponentIsRegistered = false;
 	}
 
 	Super::EndPlay(EndPlayReason);

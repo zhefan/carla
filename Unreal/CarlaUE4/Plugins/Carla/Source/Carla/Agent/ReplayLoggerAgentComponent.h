@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Agent/AgentComponentVisitor.h"
+#include "Agent/AgentComponent.h"
 
 #include "Components/SceneComponent.h"
 #include "Templates/SharedPointer.h"
@@ -16,7 +16,7 @@
 /// Actors with an UAgentComponent are registered as agents in the scene and
 /// their status is sent to the client each frame (if requested by the client).
 UCLASS(Abstract)
-class CARLA_API UReplayLoggerAgentComponent : public USceneComponent
+class CARLA_API UReplayLoggerAgentComponent : public UAgentComponent
 {
 	GENERATED_BODY()
 
@@ -41,11 +41,11 @@ protected:
 
 	/** If true, this component will be registered at BeginPlay. */
 	UPROPERTY(Category = "Replay System Agent Component", EditAnywhere)
-		bool bRegisterAgentComponent = true;
+		bool bRegisterReplayLoggerAgentComponent = true;
 
 private:
 
 	/** Whether this component has been registered. */
 	UPROPERTY(Category = "Replay System Agent Component", VisibleAnywhere, AdvancedDisplay)
-		bool bAgentComponentIsRegistered = false;
+		bool bAgentReplayLoggerComponentIsRegistered = false;
 };
