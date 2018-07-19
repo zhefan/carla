@@ -7,13 +7,19 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
+#include "Agent/AgentComponentVisitor.h"
+
+#include "Util/ObjectState.h"
+
 #include "ReplaySystemDataRouter.generated.h"
+
 
 
 class UReplayLoggerAgentComponent;
 
 UCLASS()
-class CARLA_API AReplaySystemDataRouter : public AActor
+class CARLA_API AReplaySystemDataRouter : public AActor, public IAgentComponentVisitor
 {
   GENERATED_BODY()
 
@@ -41,7 +47,12 @@ public:
 
   void Tick(float DeltaTime) override;
 
+  virtual void Visit(const UTrafficSignAgentComponent &) override;
+  virtual void Visit(const UVehicleAgentComponent &) override;
+  virtual void Visit(const UWalkerAgentComponent &) override;
+
 private:
 
 	TArray<const UReplayLoggerAgentComponent *> Agents;
+  TArray<ObjectState::FObjectState> ObjetsState;
 };

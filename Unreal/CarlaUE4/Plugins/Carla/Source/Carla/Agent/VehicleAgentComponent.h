@@ -42,6 +42,11 @@ public:
     return Vehicle->GetVehicleBoundingBoxExtent();
   }
 
+  ACarlaWheeledVehicle *GetVehicle() const
+  {
+    return Vehicle;
+  }
+
 protected:
 
   virtual void BeginPlay() override;

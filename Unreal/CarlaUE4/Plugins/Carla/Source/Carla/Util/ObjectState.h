@@ -40,7 +40,7 @@ namespace ObjectState
 
   struct FObjectTransform
   {
-    F3DVector Translation, Scale;
+    F3DVector Position, Scale;
     FQuaternion Rotation;
   }; // NOTE(Andrei): 40 bytes;
 
@@ -48,7 +48,6 @@ namespace ObjectState
   {
     FObjectTransform Transform;
     F3DVector Acceleration;
-    F3DVector Position;
 
     float Brake;
     float Throttle;
@@ -56,16 +55,14 @@ namespace ObjectState
 
     int32_t HandBreak;
     int32_t CurrentGear;
-  }; // NOTE(Andrei): 84 bytes;
+  }; // NOTE(Andrei): 72 bytes;
 
   struct FWalkerState
   {
     FObjectTransform Transform;
-    F3DVector Position;
-
     int32_t WalkerStatus;
     float TimeInState;
-  }; // NOTE(Andrei): 60 bytes
+  }; // NOTE(Andrei): 58 bytes
 
   struct FObjectHeader
   {
@@ -82,7 +79,7 @@ namespace ObjectState
       FVehicleState Vehicle;
       FWalkerState Walker;
     };
-  }; // NOTE(Andrei): 92 bytes;
+  }; // NOTE(Andrei): 80 bytes;
 
   struct FFrameObject
   {

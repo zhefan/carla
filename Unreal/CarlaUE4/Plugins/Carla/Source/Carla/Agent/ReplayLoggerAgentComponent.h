@@ -8,9 +8,6 @@
 
 #include "Agent/AgentComponent.h"
 
-#include "Components/SceneComponent.h"
-#include "Templates/SharedPointer.h"
-
 #include "ReplayLoggerAgentComponent.generated.h"
 
 /// Actors with an UAgentComponent are registered as agents in the scene and
@@ -28,8 +25,6 @@ public:
 	{
 		return GetTypeHash(this);
 	}
-
-	virtual void AcceptVisitor(IAgentComponentVisitor &Visitor) const;
 
 protected:
 

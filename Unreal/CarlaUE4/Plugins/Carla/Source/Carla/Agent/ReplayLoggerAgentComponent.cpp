@@ -33,11 +33,6 @@ UReplayLoggerAgentComponent::UReplayLoggerAgentComponent(const FObjectInitialize
 
 }
 
-void UReplayLoggerAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
-{
-	unimplemented();
-}
-
 void UReplayLoggerAgentComponent::BeginPlay()
 {
 	Super::BeginPlay();
