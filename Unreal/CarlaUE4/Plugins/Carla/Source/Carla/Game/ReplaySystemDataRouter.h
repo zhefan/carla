@@ -6,14 +6,21 @@
 
 #pragma once
 
-#include "Util/NonCopyable.h"
+#include "GameFramework/Actor.h"
+#include "ReplaySystemDataRouter.generated.h"
 
 
 class UReplayLoggerAgentComponent;
 
-class FReplaySystemDataRouter : private NonCopyable
+UCLASS()
+class CARLA_API AReplaySystemDataRouter : public AActor
 {
+  GENERATED_BODY()
+
 public:
+
+  AReplaySystemDataRouter(const FObjectInitializer& ObjectInitializer);
+  AReplaySystemDataRouter();
 
 	void RegisterAgent(const UReplayLoggerAgentComponent *Agent)
 	{
@@ -31,6 +38,8 @@ public:
 	{
 		return Agents;
 	}
+
+  void Tick(float DeltaTime) override;
 
 private:
 

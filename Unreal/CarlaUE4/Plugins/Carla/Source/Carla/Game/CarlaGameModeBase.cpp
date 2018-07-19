@@ -40,6 +40,7 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
+  ReplaySystemDataRoute = CreateDefaultSubobject<AReplaySystemDataRouter>(TEXT("ReplaySystemDataRouter"));
 }
 
 void ACarlaGameModeBase::InitGame(

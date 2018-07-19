@@ -14,7 +14,7 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 
-static FReplaySystemDataRouter &GetReplaySystemDataRouter(UWorld *World)
+static AReplaySystemDataRouter *GetReplaySystemDataRouter(UWorld *World)
 {
 	check(World != nullptr);
 	ACarlaGameModeBase *GameMode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
@@ -30,6 +30,7 @@ UReplayLoggerAgentComponent::UReplayLoggerAgentComponent(const FObjectInitialize
 	bHiddenInGame = true;
 	bShouldUpdatePhysicsVolume = false;
 	PrimaryComponentTick.bCanEverTick = false;
+
 }
 
 void UReplayLoggerAgentComponent::AcceptVisitor(IAgentComponentVisitor &Visitor) const
@@ -43,7 +44,7 @@ void UReplayLoggerAgentComponent::BeginPlay()
 
 	if (bRegisterReplayLoggerAgentComponent)
 	{
-		GetReplaySystemDataRouter(GetWorld()).RegisterAgent(this);
+		GetReplaySystemDataRouter(GetWorld())->RegisterAgent(this);
 		bAgentReplayLoggerComponentIsRegistered = true;
 	}
 }
@@ -52,7 +53,7 @@ void UReplayLoggerAgentComponent::EndPlay(const EEndPlayReason::Type EndPlayReas
 {
 	if (bAgentReplayLoggerComponentIsRegistered)
 	{
-		GetReplaySystemDataRouter(GetWorld()).DeregisterAgent(this);
+		GetReplaySystemDataRouter(GetWorld())->DeregisterAgent(this);
 		bAgentReplayLoggerComponentIsRegistered = false;
 	}
 

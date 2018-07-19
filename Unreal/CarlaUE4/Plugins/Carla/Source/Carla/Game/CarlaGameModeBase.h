@@ -49,7 +49,7 @@ public:
     return GameInstance->GetDataRouter();
   }
 
-  FReplaySystemDataRouter &GetReplaySystemDataRoute()
+  AReplaySystemDataRouter *GetReplaySystemDataRoute()
   {
 	  return ReplaySystemDataRoute;
   }
@@ -117,5 +117,6 @@ private:
   UPROPERTY()
   AWalkerSpawnerBase *WalkerSpawner;
 
-  FReplaySystemDataRouter ReplaySystemDataRoute;
+  UPROPERTY()
+  AReplaySystemDataRouter *ReplaySystemDataRoute;
 };
