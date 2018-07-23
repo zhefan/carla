@@ -85,8 +85,8 @@ namespace ObjectState
   {
     uint64_t NumberOfObject;  // NOTE(Andrei): Keep track of how many objects there are per frame
     uint64_t FrameCounter;    // NOTE(Andrei): Frame counter is not reset per episodes
-    uint32_t PlatformTime;    // NOTE(Andrei): This is the current hour in seconds
-    uint32_t GameTime;        // NOTE(Andrei): Game time is reset per episode
+    double   PlatformTime;    // NOTE(Andrei): This is the current hour in seconds
+    double   GameTime;        // NOTE(Andrei): Game time is reset per episode
   }; // NOTE(Andrei): 24 bytes
 
   // @}
