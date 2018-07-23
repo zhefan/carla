@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "CoreGlobals.h"
 #include "ReplaySystemDataRouter.h"
 
 #include "Agent/ReplayLoggerAgentComponent.h"
@@ -12,31 +13,83 @@
 
 #include "Vehicle/CarlaWheeledVehicle.h"
 
+#include <fstream>
+#include <ctime>
+
 AReplaySystemDataRouter::AReplaySystemDataRouter(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.bTickEvenWhenPaused = true;
-  PrimaryActorTick.TickGroup = TG_PostPhysics;
+  Init();
 }
 
 AReplaySystemDataRouter::AReplaySystemDataRouter()
 {
+  Init();
+}
+
+void AReplaySystemDataRouter::Init()
+{
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.bTickEvenWhenPaused = true;
   PrimaryActorTick.TickGroup = TG_PostPhysics;
+
+  time_t rawtime;
+  struct tm timeinfo = { 0 };
+
+  time(&rawtime);
+  localtime_s(&timeinfo, &rawtime);
+
+  strftime(SimulationSaveFile, sizeof(SimulationSaveFile), "simulation_%d%m%Y_%H%M%S.dat", &timeinfo);
 }
 
 void AReplaySystemDataRouter::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  GameTimeStamp += DeltaTime;
+  std::ofstream OutputFile(SimulationSaveFile, std::ofstream::binary | std::ofstream::app);
+
+  if (false == OutputFile.is_open())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Can not open file \"%s\" for saving the replay information"), UTF8_TO_TCHAR(SimulationSaveFile));
+    return;
+  }
+
   for (int32_t i = 0; i < Agents.Num(); ++i)
   {
     Agents[i]->AcceptVisitor(*this);
   }
 
-  // TODO(Andrei): Store the state to the file
+  ObjectState::FFrameObject FrameObject = { 0 };
+  FrameObject.NumberOfObject = ObjetsState.Num();
+
+  FrameObject.GameTime = GameTimeStamp;
+  FrameObject.FrameCounter = GFrameCounter;
+  FrameObject.PlatformTime = FPlatformTime::Seconds();
+
+  OutputFile.write(reinterpret_cast<const char *>(&FrameObject), sizeof(ObjectState::FFrameObject));
+
+  for (int32_t i = 0; i < ObjetsState.Num(); ++i)
+  {
+    size_t DataSize = 0;
+
+    switch (ObjetsState[i].Header.type)
+    {
+      case ObjectState::ObjectType::Vehicle:
+      {
+        DataSize = sizeof(ObjectState::FVehicleState);
+      } break;
+
+      case ObjectState::ObjectType::Walker:
+      {
+        DataSize = sizeof(ObjectState::FWalkerState);
+      } break;
+    }
+
+    OutputFile.write (reinterpret_cast<const char *>(&ObjetsState[i]), DataSize);
+  }
+
+  OutputFile.close();
   ObjetsState.Reset();
 }
 

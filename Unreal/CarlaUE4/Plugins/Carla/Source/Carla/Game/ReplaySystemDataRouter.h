@@ -53,6 +53,11 @@ public:
 
 private:
 
+  void Init();
+
 	TArray<const UReplayLoggerAgentComponent *> Agents;
   TArray<ObjectState::FObjectState> ObjetsState;
+
+  double GameTimeStamp = 0;
+  char SimulationSaveFile[128] = { 0 };
 };
