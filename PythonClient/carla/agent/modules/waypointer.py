@@ -298,7 +298,7 @@ class Waypointer(object):
                 direction_ori[0] = aux
 
                 direction = free_nodes[0]
-            except RuntimeError:
+            except IndexError:
 
                 # Repeate some route point, there is no problem.
                 direction = [round(self._route[-1][0] + direction_ori[0]),
@@ -325,17 +325,7 @@ class Waypointer(object):
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
 
-        """
-        if math.fabs(target_ori[0]) > math.fabs(target_ori[1]):
-            target_ori = (target_ori[0], 0.0, 0.0)
-        else:
-            target_ori = (0.0, target_ori[1], 0.0)
 
-        if math.fabs(source_ori[0]) > math.fabs(source_ori[1]):
-            source_ori = (source_ori[0], 0.0, 0.0)
-        else:
-            source_ori = (0.0, source_ori[1], 0.0)
-        """
 
         # Test if it is already at the goal
         if track_source == track_target:

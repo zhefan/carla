@@ -238,7 +238,7 @@ def execute(client, args):
         if carla_game.is_autopilot_enabled():
             client.send_control(measurements.player_measurements.autopilot_control)
         else:
-            client.send_control(control)
+                client.send_control(control)
 
         carla_game.print_measurements(measurements)
 

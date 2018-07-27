@@ -63,6 +63,7 @@ def run_carla_client(args):
                 camera0.set_image_size(800, 600)
                 # Set its position relative to the car in meters.
                 camera0.set_position(0.30, 0, 1.30)
+                camera0.
                 settings.add_sensor(camera0)
 
                 # Let's add another camera producing ground-truth depth.
@@ -120,6 +121,11 @@ def run_carla_client(args):
                     for name, measurement in sensor_data.items():
                         filename = args.out_filename_format.format(episode, name, frame)
                         measurement.save_to_disk(filename)
+
+                control = measurements.player_measurements.autopilot_control
+                control.steer += random.uniform(-0.1, 0.1)
+                client.send_control(control)
+
 
                 # We can access the encoded data of a given image as numpy
                 # array using its "data" property. For instance, to get the

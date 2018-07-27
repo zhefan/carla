@@ -46,18 +46,18 @@ class CarlaGame(object):
         to reach some objectives.
     """
 
-    def __init__(self, args, window_width, window_height, mini_window_width, mini_window_height):
+    def __init__(self, autopilot, display_map, window_width, window_height, mini_window_width, mini_window_height):
 
         self._timer = None
         self._display = None
         self._main_image = None
         self._mini_view_image1 = None
         self._mini_view_image2 = None
-        self._enable_autopilot = args.autopilot
+        self._enable_autopilot = autopilot
         self._lidar_measurement = None
         self._map_view = None
         self._is_on_reverse = False
-        self._display_map = args.map
+        self._display_map = display_map
         self._map_name = None
         self._map = None
         self._map_shape = None
