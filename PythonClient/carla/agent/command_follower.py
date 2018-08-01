@@ -72,7 +72,7 @@ class CommandFollower(Agent):
         ori_y_player = player.transform.orientation.y
         ori_z_player = player.transform.orientation.z
 
-        waypoints_world, waypoints = self.waypointer.get_next_waypoints(
+        waypoints_world, waypoints, route = self.waypointer.get_next_waypoints(
             (loc_x_player, loc_y_player, 0.22), (ori_x_player, ori_y_player, ori_z_player),
             (target.location.x, target.location.y, target.location.z),
             (target.orientation.x, target.orientation.y, target.orientation.z)

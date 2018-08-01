@@ -43,6 +43,15 @@ class DrivingBenchmark(object):
             save_images=False,
             distance_for_success=2.0
     ):
+        """
+        Args
+            city_name:
+            name_to_save:
+            continue_experiment:
+            save_images:
+            distance_for_success:
+            collisions_as_failure: if this flag is set to true, episodes will terminate as failure, when the car collides.
+        """
 
         self.__metaclass__ = abc.ABCMeta
 
@@ -126,7 +135,8 @@ class DrivingBenchmark(object):
                             agent, client, time_out, positions[end_index],
                             str(experiment.Conditions.WeatherId) + '_'
                             + str(experiment.task) + '_' + str(start_index)
-                            + '.' + str(end_index))
+                            + '.' + str(end_index), experiment_suite.metrics_parameters,
+                            experiment_suite.collision_as_failure)
 
                     # Write the general status of the just ran episode
                     self._recording.write_summary_results(
@@ -181,13 +191,34 @@ class DrivingBenchmark(object):
                 end_point.location.x, end_point.location.y, end_point.location.z], [
                 end_point.orientation.x, end_point.orientation.y, end_point.orientation.z])
 
+    def _has_agent_collided(self, measurement, metrics_parameters):
+
+        """
+            This function must have a certain state and only look to one measurement.
+        """
+
+        # Computing general collisions
+
+        if measurement.collision_pedestrians > metrics_parameters['collision_pedestrians']['threshold']:
+            return True
+        if measurement.collision_vehicles > metrics_parameters['collision_vehicles']['threshold']:
+            return True
+        if measurement.collision_other > metrics_parameters['collision_other']['threshold']:
+            return True
+
+        return False
+
+
+
     def _run_navigation_episode(
             self,
             agent,
             client,
             time_out,
             target,
-            episode_name):
+            episode_name,
+            metrics_parameters,
+            collision_as_failure):
         """
          Run one episode of the benchmark (Pose) for a certain agent.
 
@@ -199,6 +230,7 @@ class DrivingBenchmark(object):
             time_out: the time limit to complete this episode
             target: the target to reach
             episode_name: The name for saving images of this episode
+            metrics_object: The metrics object to check for collisions
 
         """
 
@@ -215,9 +247,10 @@ class DrivingBenchmark(object):
         control_vec = []
         frame = 0
         distance = 10000
+        fail = False
         success = False
 
-        while (current_timestamp - initial_timestamp) < (time_out * 1000) and not success:
+        while not fail and not success:
 
             # Read data from server with the client
             measurements, sensor_data = client.read_data()
@@ -240,6 +273,7 @@ class DrivingBenchmark(object):
 
             current_timestamp = measurements.game_timestamp
             # Get the distance travelled until now
+
             distance = sldist([current_x, current_y],
                               [target.location.x, target.location.y])
             # Write status of the run on verbose mode
@@ -251,6 +285,12 @@ class DrivingBenchmark(object):
             # Check if reach the target
             if distance < self._distance_for_success:
                 success = True
+            elif (current_timestamp - initial_timestamp) > (time_out * 1000):
+                fail = True
+            elif self._has_agent_collided(measurements.player_measurements, metrics_parameters) \
+                    and collision_as_failure:
+                fail = True
+
 
             # Increment the vectors and append the measurements and controls.
             frame += 1

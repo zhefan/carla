@@ -304,7 +304,18 @@ class Waypointer(object):
                 direction = [round(self._route[-1][0] + direction_ori[0]),
                              round(self._route[-1][1] + direction_ori[1])]
 
+            print (" added extra point  ", direction)
             self._route.append(direction)
+
+
+    def convert_list_of_nodes_to_pixel(self, route):
+        map_points = []
+        for point in route:
+            map_point = self._converter.convert_to_pixel([int(point[0]), int(point[1])])
+
+            map_points.append(map_point)
+
+        return map_points
 
 
 
@@ -322,6 +333,8 @@ class Waypointer(object):
         Returns:
 
         """
+
+        # Project the source and target on the node space.
         track_source = self._city_track.project_node(source)
         track_target = self._city_track.project_node(target)
 
@@ -329,23 +342,26 @@ class Waypointer(object):
 
         # Test if it is already at the goal
         if track_source == track_target:
-            return self.last_trajectory, self.last_map_points
+            return self.last_trajectory, self.last_map_points, self.convert_list_of_nodes_to_pixel(self._route)
 
         # This is to avoid computing a new route when inside the route
-
+        # The the distance to the closest intersection.
         distance_node = self._city_track.closest_intersection_position(track_source)
 
+
+        # Potential problem, if the car goest too fast, there can be problems for the turns.
         if distance_node > 2 and self._previous_source != track_source:
 
             # print node_source
-            # print node_target
+            # print node_targetW
             self._route = self._city_track.compute_route(track_source, source_ori, track_target,
                                                          target_ori)
+
 
             # print self._route
 
             # IF needed we add points after the objective, that is very hacky.
-            # TODO: this go inside the extra points
+
             self.add_extra_points(track_target, target_ori, track_source)
 
             self.points = self.graph_to_waypoints(
@@ -354,7 +370,7 @@ class Waypointer(object):
             self.last_trajectory, self.last_map_points = self.generate_final_trajectory(
                 [np.array(self._converter.convert_to_pixel(source))] + self.points)
 
-            return self.last_trajectory, self.last_map_points
+            return self.last_trajectory, self.last_map_points, self.convert_list_of_nodes_to_pixel(self._route)
 
 
         else:
@@ -393,7 +409,7 @@ class Waypointer(object):
                                 point))  # = [self.make_world_map(point)] + self.last_trajc
                         self.last_map_points.remove(point)
 
-            return self.last_trajectory, self.last_map_points
+            return self.last_trajectory, self.last_map_points, self.convert_list_of_nodes_to_pixel(self._route)
 
         # This function uses the map to test if some specific position is too close to intersections
 
