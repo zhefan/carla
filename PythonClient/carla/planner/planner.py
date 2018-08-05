@@ -67,8 +67,9 @@ class Planner(object):
         if self._city_track.is_at_goal(track_source, track_target):
             return REACH_GOAL
 
-        if (self._city_track.is_at_new_node(track_source)
-                and self._city_track.is_away_from_intersection(track_source)):
+
+        if (self._city_track.is_at_new_node(track_source)):
+                #and self._city_track.is_away_from_intersection(track_source)):
 
             route = self._city_track.compute_route(track_source, source_ori,
                                                    track_target, target_ori)
@@ -91,7 +92,7 @@ class Planner(object):
                     track_source):
                 return LANE_FOLLOW
 
-            # If there is computed commands
+            # If there are computed commands
             if self._commands:
                 return self._commands[0]
             else:

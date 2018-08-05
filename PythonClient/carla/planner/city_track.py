@@ -4,6 +4,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import numpy as np
+
 from carla.planner.graph import sldist
 
 from carla.planner.astar import AStar
@@ -34,6 +36,7 @@ class CityTrack(object):
         """
 
         node = self._map.convert_to_node(position)
+        #print ("Converted Node ", node)
 
         # To change the orientation with respect to the map standards
 
@@ -46,6 +49,7 @@ class CityTrack(object):
                 min(self._map.get_graph_resolution()[1] - 1, node[1]))
 
         node = self._map.search_on_grid(node)
+        #print("Final Node ", node)
 
         return node
 
@@ -65,9 +69,12 @@ class CityTrack(object):
         return source == target
 
     def is_at_new_node(self, current_node):
+        print ( " Current ", current_node)
+        print ( " previous ", self._previous_node)
         return current_node != self._previous_node
 
     def is_away_from_intersection(self, current_node):
+        print ( " Dist to intersection ", self.closest_intersection_position(current_node))
         return self.closest_intersection_position(current_node) > 1
 
     def is_far_away_from_route_intersection(self, current_node):
@@ -80,9 +87,23 @@ class CityTrack(object):
         return self._closest_intersection_route_position(current_node,
                                                          self._route) > 4
 
+
+    def move_node(self, node, direction, displacement):
+
+
+        moved_node = [round(node[0] + displacement*direction[0]),
+                        round(node[1] + displacement*direction[1])]
+
+        return moved_node
+
     def compute_route(self, node_source, source_ori, node_target, target_ori):
 
         self._previous_node = node_source
+
+        printing_grid = np.copy(self._map._grid._structure)
+
+
+        np.set_printoptions(edgeitems=3, infstr='inf', threshold=np.nan, linewidth=129)
 
         a_star = AStar()
         a_star.init_grid(self._map.get_graph_resolution()[0],
@@ -91,10 +112,39 @@ class CityTrack(object):
                                                       node_target, target_ori), node_source,
                          node_target)
 
-        route = a_star.solve()
+        route = a_star.solve(printing_grid)
+        printing_grid[node_source[0], node_source[1]] = 7
+
+        printing_grid[node_target[0], node_target[1]] = 2
+
+        #print(printing_grid)
 
         # JuSt a Corner Case
         # Clean this to avoid having to use this function
+
+
+
+
+
+
+        if route is None:
+            printing_grid = np.copy(self._map._grid._structure)
+            #printing_grid[node_target[0], node_target[1]] = 3
+            printing_grid[node_source[0], node_source[1]] = 7
+
+            printing_grid[node_target[0], node_target[1]] = 2
+            a_star = AStar()
+            a_star.init_grid(self._map.get_graph_resolution()[0],
+                             self._map.get_graph_resolution()[1],
+                             self._map.get_walls_directed(node_source, source_ori,
+                                                          node_target, target_ori, both_walls=False), node_source,
+                             node_target)
+
+            route = a_star.solve(printing_grid)
+            #print("AFTER REMOVING")
+            #print(printing_grid)
+
+        """
         if route is None:
             a_star = AStar()
             a_star.init_grid(self._map.get_graph_resolution()[0],
@@ -102,6 +152,7 @@ class CityTrack(object):
                              node_source, node_target)
 
             route = a_star.solve()
+        """
 
         self._route = route
 
@@ -124,6 +175,14 @@ class CityTrack(object):
 
         distance_vector = []
         for node_iterator in self._map.get_intersection_nodes():
+            distance_vector.append(sldist(node_iterator, current_node))
+
+        return sorted(distance_vector)[0]
+
+    def closest_curve_position(self, current_node):
+
+        distance_vector = []
+        for node_iterator in self._map.get_curve_nodes():
             distance_vector.append(sldist(node_iterator, current_node))
 
         return sorted(distance_vector)[0]

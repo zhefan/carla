@@ -81,6 +81,11 @@ class ExperimentSuite(object):
         weathers.update(self.test_weathers)
         return weathers
 
+    @property
+    def collision_as_failure(self):
+        return False
+
+
     @abc.abstractmethod
     def build_experiments(self):
         """

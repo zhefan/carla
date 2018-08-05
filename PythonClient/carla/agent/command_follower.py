@@ -21,8 +21,8 @@ class CommandFollower(Agent):
             'coast_factor': 2,  # Factor to control coasting
             'tl_dist_thres': 15,  # Distance Threshold Traffic Light
             'tl_angle_thres': 0.5,  # Angle Threshold Traffic Light
-            'p_dist_thres': 10,  # Distance Threshold Pedestrian
-            'p_angle_thres': 0.3,  # Angle Threshold Pedestrian
+            'p_dist_thres': 25,  # Distance Threshold Pedestrian
+            'p_angle_thres': 0.5,  # Angle Threshold Pedestrian
             'v_dist_thres': 15,  # Distance Threshold Vehicle
             'v_angle_thres': 0.35  # Angle Threshold Vehicle
 
@@ -33,18 +33,18 @@ class CommandFollower(Agent):
             'default_brake': 0.0,  # Default Brake
             'steer_gain': 0.7,  # Gain on computed steering angle
             'brake_strength': 1,  # Strength for applying brake - Value between 0 and 1
-            'pid_p': 0.2,  # PID speed controller parameters
-            'pid_i': 0.08,
-            'pid_d': 0.0,
+            'pid_p': 0.25,  # PID speed controller parameters
+            'pid_i': 0.005,
+            'pid_d': 0.00,
             'target_speed': 35,  # Target speed - could be controlled by speed limit
             'throttle_max': 0.75,
         }
 
 
-        self.wp_num_steer = 0.8  # Select WP - Reverse Order: 1 - closest, 0 - furthest
-        self.wp_num_speed = 0.5  # Select WP - Reverse Order: 1 - closest, 0 - furthest
+        self.wp_num_steer = 0.9  # Select WP - Reverse Order: 1 - closest, 0 - furthest
+        self.wp_num_speed = 0.2  # Select WP - Reverse Order: 1 - closest, 0 - furthest
         self.waypointer = Waypointer(town_name)
-        self.obstacle_avoider = ObstacleAvoidance(param_obstacles)
+        self.obstacle_avoider = ObstacleAvoidance(param_obstacles, town_name)
         self.controller = Controller(param_controller)
 
 
@@ -72,7 +72,7 @@ class CommandFollower(Agent):
         ori_y_player = player.transform.orientation.y
         ori_z_player = player.transform.orientation.z
 
-        waypoints_world, waypoints = self.waypointer.get_next_waypoints(
+        waypoints_world, waypoints, route = self.waypointer.get_next_waypoints(
             (loc_x_player, loc_y_player, 0.22), (ori_x_player, ori_y_player, ori_z_player),
             (target.location.x, target.location.y, target.location.z),
             (target.orientation.x, target.orientation.y, target.orientation.z)
@@ -96,12 +96,18 @@ class CommandFollower(Agent):
             wp_angle = 0
 
         # WP Look Ahead for steering
-        wp_speed = [waypoints[int(self.wp_num_speed * len(waypoints))][0],
-                         waypoints[int(self.wp_num_speed * len(waypoints))][1]]
-        wp_vector_speed, wp_mag_speed = get_vec_dist(wp_speed[0], wp_speed[1],
+        #print (waypoints_world)
+        wp_speed = [waypoints_world[int(self.wp_num_speed * len(waypoints_world))][0],
+                    waypoints_world[int(self.wp_num_speed * len(waypoints_world))][1]]
+
+
+        wp_vector_speed, _ = get_vec_dist(wp_speed[0], wp_speed[1],
                                                      loc_x_player,
                                                      loc_y_player)
+
+
         wp_angle_speed = get_angle(wp_vector_speed, [ori_x_player, ori_y_player])
+        #print('vector speed ', wp_vector_speed, ' vehicle orientation', [ori_x_player, ori_y_player])
 
         # print ('Next Waypoint (Steer): ', waypoints[self.wp_num_steer][0], waypoints[self.wp_num_steer][1])
         # print ('Car Position: ', player.transform.location.x, player.transform.location.y)
@@ -118,4 +124,4 @@ class CommandFollower(Agent):
         control = self.controller.get_control(wp_angle, wp_angle_speed, speed_factor,
                                               player.forward_speed*3.6)
 
-        return control
+        return control, waypoints, route

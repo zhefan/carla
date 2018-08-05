@@ -53,6 +53,7 @@ class Grid(object):
             start_to_goal = np.array([adj[0] - pos[0], adj[1] - pos[1]])
             angle = angle_between(heading_start, start_to_goal)
             if (angle > 1.6 and adj != target):
+                #print ("added source ", (adj[0], adj[1]))
                 final_walls.add((adj[0], adj[1]))
 
         return final_walls
@@ -68,6 +69,7 @@ class Grid(object):
             angle = angle_between(heading_start, start_to_goal)
 
             if (angle < 1.0 and adj != source):
+                #print("added target ", (adj[0], adj[1]))
                 final_walls.add((adj[0], adj[1]))
 
         return final_walls

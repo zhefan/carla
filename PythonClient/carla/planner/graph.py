@@ -107,6 +107,15 @@ class Graph(object):
 
         return intersect_nodes
 
+    def curve_nodes(self):
+
+        intersect_nodes = []
+        for node in self._nodes:
+            if len(self._edges[node]) > 1:
+                intersect_nodes.append(node)
+
+        return intersect_nodes
+
     # This contains also the non-intersection turns...
 
     def turn_nodes(self):

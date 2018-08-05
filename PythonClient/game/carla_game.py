@@ -233,6 +233,27 @@ class CarlaGame(object):
 
             pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 3, 0)
 
+    def _draw_route(self, surface, waypoints):
+        """
+            Draw the waypoints on the map surface.
+        Args:
+            surface:
+            waypoints: waypoints produced by the local planner.
+
+        Returns:
+
+        """
+        for waypoint in waypoints:
+            new_window_width = \
+                (float(self._window_height) / float(self._map_shape[0])) * \
+                float(self._map_shape[1])
+
+            w_pos = int(waypoint[0] * (float(self._window_height) / float(self._map_shape[0])))
+            h_pos = int(waypoint[1] * (new_window_width / float(self._map_shape[1])))
+
+            pygame.draw.circle(surface, [255, 165, 0, 255], (w_pos, h_pos), 3, 0)
+
+
     def _draw_goal_position(self, surface):
         """
             Draw the goal position on the map surface.
@@ -251,9 +272,10 @@ class CarlaGame(object):
             self._goal_position[0] * (float(self._window_height) / float(self._map_shape[0])))
         h_pos = int(self._goal_position[1] * (new_window_width / float(self._map_shape[1])))
 
-        pygame.draw.circle(surface, [0, 255, 0, 255], (w_pos, h_pos), 7, 0)
+        pygame.draw.circle(surface, [0, 255, 0, 255], (w_pos, h_pos), 3, 0)
 
-    def render(self, sensor_data, player_position=None, waypoints=None, agents_positions=None):
+    def render(self, sensor_data, player_position=None, waypoints=None,
+               agents_positions=None, route=None):
         """
         Main rendering function.
         Args:
@@ -327,8 +349,10 @@ class CarlaGame(object):
 
             if waypoints is not None:
                 self._draw_waypoints(surface, waypoints)
+            if route is not None:
+                self._draw_route(surface, route)
             self._draw_goal_position(surface)
-            pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 6, 0)
+            pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 3, 0)
             for agent in agents_positions:
                 if agent.HasField('vehicle'):
                     agent_position = self._map.convert_to_pixel([

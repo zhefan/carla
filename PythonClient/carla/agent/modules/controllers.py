@@ -29,19 +29,19 @@ class Controller(object):
         else:
             control.steer = max(steer, -1)
 
-        # Don't go to fast around corners
+        # Don't go0 to fast around corners
         if math.fabs(wp_angle_speed) < 0.1:
             target_speed_adjusted = self.params['target_speed'] * speed_factor
         elif math.fabs(wp_angle_speed) < 0.5:
-            target_speed_adjusted = 25 * speed_factor
-        else:
             target_speed_adjusted = 20 * speed_factor
+        else:
+            target_speed_adjusted = 15 * speed_factor
 
         self.pid.target = target_speed_adjusted
         pid_gain = self.pid(feedback=current_speed)
-        #print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
-        #print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
-        #       speed_factor)
+        print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
+        print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
+               speed_factor)
 
         throttle = min(max(self.params['default_throttle'] - 0.25 * pid_gain, 0),
                        self.params['throttle_max'])
@@ -55,6 +55,6 @@ class Controller(object):
         control.throttle = max(throttle, 0.01)  # Prevent N by putting at least 0.01
         control.brake = brake
 
-        # print ('Throttle: ', control.throttle, 'Brake: ', control.brake, 'Steering Angle: ', control.steer)
+        print ('Throttle: ', control.throttle, 'Brake: ', control.brake, 'Steering Angle: ', control.steer)
 
         return control

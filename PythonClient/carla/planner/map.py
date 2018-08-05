@@ -119,19 +119,32 @@ class CarlaMap(object):
         """
         return self._converter.convert_to_world(input_data)
 
-    def get_walls_directed(self, node_source, source_ori, node_target, target_ori):
+    def get_walls_directed(self, node_source, source_ori, node_target, target_ori, both_walls=True):
         """
         This is the most hacky function. Instead of planning on two ways,
         we basically use a one way road and interrupt the other road by adding
         an artificial wall.
-
         """
 
-        final_walls = self._grid.get_wall_source(node_source, source_ori, node_target)
+        if both_walls:
+            final_walls = self._grid.get_wall_source(node_source, source_ori, node_target)
 
-        final_walls = final_walls.union(self._grid.get_wall_target(
-            node_target, target_ori, node_source))
-        return final_walls
+            final_walls = final_walls.union(self._grid.get_wall_target(
+                node_target, target_ori, node_source))
+
+            return final_walls
+        else:
+
+            return self._grid.get_wall_source(node_source, source_ori, node_target)
+
+    def is_point_on_lane(self, world):
+        pixel = self.convert_to_pixel(world)
+        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
+        print ('ori', ori)
+        if ori == 0:
+            return False
+        else:
+            return True
 
     def get_walls(self):
 
@@ -147,6 +160,9 @@ class CarlaMap(object):
 
     def get_intersection_nodes(self):
         return self._graph.intersection_nodes()
+
+    def get_curve_nodes(self):
+        return self._graph.curve_nodes()
 
     def get_adjacent_free_nodes(self, pos):
         return self._grid.get_adjacent_free_nodes(pos)

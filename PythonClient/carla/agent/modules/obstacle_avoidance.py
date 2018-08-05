@@ -1,16 +1,20 @@
 import math
 
 from .utils import get_vec_dist, get_angle
-
+from carla.planner.map import CarlaMap
 
 class ObstacleAvoidance(object):
 
-    def __init__(self, param):
+    def __init__(self, param, city_name):
 
+
+        self._node_density = 50.0
+        self._pixel_density = 0.1643
+
+        self._map = CarlaMap(city_name, self._pixel_density, self._node_density)
         self.param = param
         # Select WP Number
-        self.wp_num_steer = 0.8  # Select WP - Reverse Order: 1 - closest, 0 - furthest
-        self.wp_num_speed = 0.5  # Select WP - Reverse Order: 1 - closest, 0 - furthest
+
 
 
     def stop_traffic_light(self, location, agent, wp_vector, wp_angle, speed_factor_tl):
@@ -24,11 +28,12 @@ class ObstacleAvoidance(object):
             # tl_angle = self.get_angle(tl_vector,[ori_x_player,ori_y_player])
             tl_angle = get_angle(tl_vector, wp_vector)
             # print ('Traffic Light: ', tl_vector, tl_dist, tl_angle)
-            if (
-                    0 < tl_angle < self.param['tl_angle_thres'] / self.param['coast_factor'] and tl_dist < self.param['tl_dist_thres'] * self.param['coast_factor']) or (
+
+            if (0 < tl_angle < self.param['tl_angle_thres'] / self.param['coast_factor'] and tl_dist < self.param['tl_dist_thres'] * self.param['coast_factor']) or (
                     0 < tl_angle < self.param['tl_angle_thres'] and tl_dist < self.param['tl_dist_thres']) and math.fabs(
                 wp_angle) < 0.2:
                 speed_factor_tl_temp = tl_dist / (self.param['coast_factor'] * self.param['tl_dist_thres'])
+
             if (
                     0 < tl_angle < self.param['tl_angle_thres'] * self.param['coast_factor'] and tl_dist < self.param['tl_dist_thres'] / self.param['coast_factor']) and math.fabs(
                 wp_angle) < 0.2:
@@ -48,17 +53,41 @@ class ObstacleAvoidance(object):
         p_vector, p_dist = get_vec_dist(x_agent, y_agent, location.x, location.y)
         # p_angle = self.get_angle(p_vector,[ori_x_player,ori_y_player])
         p_angle = get_angle(p_vector, wp_vector)
-        # print ('Pedestrian: ', p_vector, p_dist, p_angle)
+
+        # Define flag, if pedestrian is outside the sidewalk ?
+
+
         if (math.fabs(
                 p_angle) < self.param['p_angle_thres'] / self.param['coast_factor'] and p_dist < self.param['p_dist_thres'] * self.param['coast_factor']) or (
-                0 < p_angle < self.param['p_angle_thres'] and p_dist < self.param['p_dist_thres']):
-            speed_factor_p_temp = p_dist / (self.param['coast_factor'] * self.param['p_dist_thres'])
+                0 < p_angle < self.param['p_angle_thres'] and p_dist < self.param['p_dist_thres']
+            ):
+
+            if self._map.is_point_on_lane([x_agent, y_agent, 38]):
+                print("PEDESTRIAN ON LANE ")
+                #speed_factor_p_temp = p_dist / (self.param['coast_factor'] * self.param['p_dist_thres'])
+                speed_factor_p_temp = 0
+                print('Pedestrian: ', p_vector, p_dist, p_angle)
+
+                print(" Resulting speed factor ", speed_factor_p)
+                print (" Case 1 ")
+            else:
+                print ('Pedestrian close not on lane')
+
         if (math.fabs(
                 p_angle) < self.param['p_angle_thres'] * self.param['coast_factor'] and p_dist < self.param['p_dist_thres'] / self.param['coast_factor']):
-            speed_factor_p_temp = 0
+
+            if self._map.is_point_on_lane([x_agent, y_agent, 38]):
+                print("PEDESTRIAN ON LANE ")
+                speed_factor_p_temp = 0
+                print('Pedestrian: ', p_vector, p_dist, p_angle)
+                print(" Case 2 ")
+            else:
+                print ('Pedestrian close not on lane')
+
 
         if (speed_factor_p_temp < speed_factor_p):
             speed_factor_p = speed_factor_p_temp
+
 
         return speed_factor_p
 

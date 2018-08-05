@@ -125,17 +125,24 @@ class AStar(object):
         adj.parent = cell
         adj.f = adj.h + adj.g
 
-    def solve(self):
+    def solve(self, printing_grid):
         """Solve maze, find path to ending cell.
 
         @returns path or None if not found.
         """
         # add starting cell to open heap queue
         heapq.heappush(self.opened, (self.start.f, self.start))
+        print ('start ', self.start.x, self.start.y, 'end ', self.end.x, self.end.y)
+        printing_grid[self.start.x, self.start.y] = 2.0
+        printing_grid[self.end.x, self.end.y] = 4.0
+
         while len(self.opened):
             # pop cell from heap queue
             _, cell = heapq.heappop(self.opened)
+
             # add cell to closed list so we don't process it twice
+            printing_grid[cell.x, cell.y] = 3.0
+
             self.closed.add(cell)
             # if ending cell, return found path
             if cell is self.end:
