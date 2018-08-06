@@ -44,7 +44,48 @@ class ObstacleAvoidance(object):
 
         return speed_factor_tl
 
+        # TODO this functions should be all separate.
+    def is_pedestrian_hitable(self):
+
+        """
+        Determine if a certain pedestrian is in a hitable zone or it is pasible
+        to be hit in a near future.
+        Should check if pedestrians are on lane and or if the pedestrians are out
+        of the lane but with velocity vector pointing to lane.
+        :return:
+        """
+        pass
+
     def stop_pedestrian(self, location, agent, wp_vector, speed_factor_p):
+
+
+        def is_pedestrian_on_hit_zone():
+            """
+            Draw a semi circle with a big radius but small period from the circunference.
+            Pedestrians on this zone
+            :return:
+            """
+
+            pass
+
+
+
+        def is_pedestrian_on_near_hit_zone():
+
+            pass
+
+        if is_pedestrian_on_near_hit_zone():
+
+            return 0
+
+        if is_pedestrian_on_hit_zone():
+            # return  some proportional to distance deacceleration constant.
+            pass
+
+
+
+
+        """
 
         speed_factor_p_temp = 1
 
@@ -90,6 +131,7 @@ class ObstacleAvoidance(object):
 
 
         return speed_factor_p
+        """
 
     def stop_vehicle(self, location, agent, wp_vector, speed_factor_v):
         speed_factor_v_temp = 1
@@ -119,17 +161,24 @@ class ObstacleAvoidance(object):
         speed_factor_tl = 1
         speed_factor_p = 1
         speed_factor_v = 1
-
+        hitable_pedestrians = []    # The list of pedestrians that are on roads or nearly on roads
         for agent in agents:
 
             if agent.HasField('traffic_light') and self.param['stop4TL']:
                 speed_factor_tl = self.stop_traffic_light(location, agent, wp_angle,
                                                           wp_vector, speed_factor_tl)
             if agent.HasField('pedestrian') and self.param['stop4P']:
-                speed_factor_p = self.stop_pedestrian(location, agent, wp_vector, speed_factor_p)
+                if self.is_pedestrian_hitable(agent):
+
+
+                    speed_factor_p = self.stop_pedestrian(location, agent, wp_vector, speed_factor_p)
+
+                    hitable_pedestrians.append(agent)
+
+
             if agent.HasField('vehicle') and self.param['stop4V']:
                 speed_factor_v = self.stop_vehicle(location, agent, wp_vector, speed_factor_v)
 
             speed_factor = min(speed_factor_tl, speed_factor_p, speed_factor_v)
 
-        return speed_factor
+        return speed_factor, hitable_pedestrians
