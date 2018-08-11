@@ -63,7 +63,7 @@ def run_carla_client(args):
                 camera0.set_image_size(800, 600)
                 # Set its position relative to the car in meters.
                 camera0.set_position(0.30, 0, 1.30)
-                camera0.
+
                 settings.add_sensor(camera0)
 
                 # Let's add another camera producing ground-truth depth.
@@ -95,6 +95,7 @@ def run_carla_client(args):
             # with a scene description containing the available start spots for
             # the player. Here we can provide a CarlaSettings object or a
             # CarlaSettings.ini file as string.
+
             scene = client.load_settings(settings)
 
             # Choose one player start at random.
@@ -105,6 +106,7 @@ def run_carla_client(args):
             # player_start index. This function blocks until the server is ready
             # to start the episode.
             print('Starting new episode at %r...' % scene.map_name)
+
             client.start_episode(player_start)
 
             # Iterate every frame in the episode.

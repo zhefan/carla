@@ -39,7 +39,7 @@ class Waypointer(object):
 
         self.lane_shift_distance = 13   # The amount of shifting from the center the car should go
         self.extra_spacing_rights = -3
-        self.extra_spacing_lefts = 8  # This is wrong, since it is expressed in world units
+        self.extra_spacing_lefts = 7  # This is wrong, since it is expressed in world units
         self.way_key_points_predicted = 7
         self.number_of_waypoints = 30
 

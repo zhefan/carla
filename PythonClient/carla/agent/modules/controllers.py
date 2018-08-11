@@ -39,15 +39,15 @@ class Controller(object):
 
         self.pid.target = target_speed_adjusted
         pid_gain = self.pid(feedback=current_speed)
-        print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
-        print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
-               speed_factor)
+        #print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
+        #print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
+        #       speed_factor)
 
-        throttle = min(max(self.params['default_throttle'] - 0.25 * pid_gain, 0),
+        throttle = min(max(self.params['default_throttle'] - 1.3 * pid_gain, 0),
                        self.params['throttle_max'])
 
         if pid_gain > 0.5:
-            brake = min(0.25 * pid_gain * self.params['brake_strength'], 1)
+            brake = min(0.35 * pid_gain * self.params['brake_strength'], 1)
         else:
             brake = 0
 

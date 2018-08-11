@@ -95,6 +95,15 @@ class CarlaMap(object):
 
         return (-math.cos(ori), -math.sin(ori))
 
+    def get_lane_orientation_degrees(self, world):
+        """Get the lane orientation of a certain world position."""
+        pixel = self.convert_to_pixel(world)
+
+        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
+
+        return color_to_angle(ori)
+
+
     def convert_to_node(self, input_data):
         """
         Receives a data type (Can Be Pixel or World )
@@ -139,12 +148,21 @@ class CarlaMap(object):
 
     def is_point_on_lane(self, world):
         pixel = self.convert_to_pixel(world)
-        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 2]
-        print ('ori', ori)
+        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 1]
+
         if ori == 0:
             return False
         else:
             return True
+
+    def is_point_on_intersection(self, world):
+        pixel = self.convert_to_pixel(world)
+        ori = self.map_image_lanes[int(pixel[1]), int(pixel[0]), 0]
+
+        if ori > 0:
+            return True
+        else:
+            return False
 
     def get_walls(self):
 

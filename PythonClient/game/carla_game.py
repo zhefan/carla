@@ -1,5 +1,6 @@
 import time
 import logging
+import math
 
 try:
     import pygame
@@ -40,6 +41,11 @@ class Timer(object):
         return time.time() - self._lap_time
 
 
+
+def vector_to_degrees(vector):
+
+    return math.atan2(-vector[1], vector[0])
+
 class CarlaGame(object):
     """
         Class to plot a game screen and control a simple situation were the player has
@@ -69,7 +75,7 @@ class CarlaGame(object):
         self._mini_window_width = mini_window_width
         self._mini_window_height = mini_window_height
 
-    def initialize_game(self, map_name):
+    def initialize_game(self, map_name, render_mode=True):
         """
             Initialize the windows
         Args:
@@ -79,26 +85,32 @@ class CarlaGame(object):
             None
 
         """
+        self._render_mode = render_mode
+
         self._map_name = map_name
-        if self._display_map:
-            self._map = CarlaMap(map_name, 0.1643, 50.0)
-            self._map_shape = self._map.map_image.shape
-            self._map_view = self._map.get_map(self._window_height)
 
-            extra_width = int(
-                (self._window_height / float(self._map_shape[0])) * self._map_shape[1])
-            self._display = pygame.display.set_mode(
-                (self._window_width + extra_width, self._window_height),
-                pygame.HWSURFACE | pygame.DOUBLEBUF)
-        else:
-            self._display = pygame.display.set_mode(
-                (self._window_width, self._window_height),
-                pygame.HWSURFACE | pygame.DOUBLEBUF)
+        if self._render_mode:
+            if self._display_map:
+                self._map = CarlaMap(map_name, 0.1643, 50.0)
+                self._map_shape = self._map.map_image.shape
+                self._map_view = self._map.get_map(self._window_height)
 
-        logging.debug('pygame started')
+                extra_width = int(
+                    (self._window_height / float(self._map_shape[0])) * self._map_shape[1])
+                self._display = pygame.display.set_mode(
+                    (self._window_width + extra_width, self._window_height),
+                    pygame.HWSURFACE | pygame.DOUBLEBUF)
+            else:
+                self._display = pygame.display.set_mode(
+                    (self._window_width, self._window_height),
+                    pygame.HWSURFACE | pygame.DOUBLEBUF)
+
+            logging.debug('pygame started')
+
 
     def start_timer(self):
         self._timer = Timer()
+
 
     def set_objective(self, goal_position):
         """
@@ -125,12 +137,16 @@ class CarlaGame(object):
         Returns:
 
         """
+
         if self._display_map:
             player_position = self._map.convert_to_pixel([
                 player_position.x, player_position.y, player_position.z])
 
             if sldist(player_position, self._goal_position) < 7.0:
                 return True
+
+        if not self._render_mode:
+            return False
 
         keys = pygame.key.get_pressed()
         return keys[K_r]
@@ -141,6 +157,8 @@ class CarlaGame(object):
         Returns:
             if esc was pressed
         """
+        if not self._render_mode:
+            return True
         keys = pygame.key.get_pressed()
         return not keys[K_ESCAPE]
 
@@ -253,6 +271,17 @@ class CarlaGame(object):
 
             pygame.draw.circle(surface, [255, 165, 0, 255], (w_pos, h_pos), 3, 0)
 
+    def _draw_fov(self, surface, center, player_orientation, radius, angle, color):
+        new_window_width = \
+            (float(self._window_height) / float(self._map_shape[0])) * \
+            float(self._map_shape[1])
+
+        w_pos = int(center[0] * (float(self._window_height) / float(self._map_shape[0])))
+        h_pos = int(center[1] * (new_window_width / float(self._map_shape[1])))
+
+        pygame.draw.arc(surface, color, (w_pos-radius/2, h_pos-radius/2, radius, radius),
+                        player_orientation-angle, player_orientation + angle, int(radius/2))
+
 
     def _draw_goal_position(self, surface):
         """
@@ -274,8 +303,8 @@ class CarlaGame(object):
 
         pygame.draw.circle(surface, [0, 255, 0, 255], (w_pos, h_pos), 3, 0)
 
-    def render(self, sensor_data, player_position=None, waypoints=None,
-               agents_positions=None, route=None):
+    def render(self, sensor_data, camera_names, player_transform=None, waypoints=None,
+               agents_positions=None, route=None, hitable_pedestrians=None, fov_list=None):
         """
         Main rendering function.
         Args:
@@ -291,9 +320,11 @@ class CarlaGame(object):
         gap_x = (self._window_width - 2 * self._mini_window_width) / 3
         mini_image_y = self._window_height - self._mini_window_height - gap_x
 
-        main_image = sensor_data.get('CameraRGB', None)
-        mini_view_image1 = sensor_data.get('CameraDepth', None)
-        mini_view_image2 = sensor_data.get('CameraSemSeg', None)
+
+
+        main_image = sensor_data.get(camera_names['rgb'], None)
+        mini_view_image1 = sensor_data.get(camera_names['depth'], None)
+        mini_view_image2 = sensor_data.get(camera_names['labels'], None)
         lidar_measurement = sensor_data.get('Lidar32', None)
 
         if main_image is not None:
@@ -330,22 +361,38 @@ class CarlaGame(object):
 
         # only if the map view setting is set we actually plot all the positions and waypoints
         if self._map_view is not None:
+
+
             player_position = self._map.convert_to_pixel([
-                player_position.x,
-                player_position.y,
-                player_position.z])
+                player_transform.location.x,
+                player_transform.location.y,
+                player_transform.location.z])
 
             array = self._map_view
             array = array[:, :, :3]
+
 
             new_window_width = \
                 (float(self._window_height) / float(self._map_shape[0])) * \
                 float(self._map_shape[1])
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
+            # Draw other two fovs
+            fov_1 = fov_list[0]
+            fov_2 = fov_list[1]
+
+            self._draw_fov(surface, player_position,
+                           vector_to_degrees([player_transform.orientation.x, player_transform.orientation.y]),
+                           radius=fov_1[0]/(0.1643*2), angle=fov_1[1], color=[0, 255, 0, 255])
+            self._draw_fov(surface, player_position,
+                           vector_to_degrees([player_transform.orientation.x, player_transform.orientation.y]),
+                           radius=fov_2[0]/(0.1643*2), angle=fov_2[1], color=[0, 255, 128, 255])
+
             w_pos = int(
                 player_position[0] * (float(self._window_height) / float(self._map_shape[0])))
             h_pos = int(player_position[1] * (new_window_width / float(self._map_shape[1])))
+
+
 
             if waypoints is not None:
                 self._draw_waypoints(surface, waypoints)
@@ -354,18 +401,25 @@ class CarlaGame(object):
             self._draw_goal_position(surface)
             pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 3, 0)
             for agent in agents_positions:
-                if agent.HasField('vehicle'):
+                if agent.HasField('traffic_light'):
+                    if  hitable_pedestrians is not None and agent.id in hitable_pedestrians:
+                        color = [255, 128, 0, 255]
+                    else:
+                        color = [255, 0, 255, 255]
+
                     agent_position = self._map.convert_to_pixel([
-                        agent.vehicle.transform.location.x,
-                        agent.vehicle.transform.location.y,
-                        agent.vehicle.transform.location.z])
+                        agent.traffic_light.transform.location.x,
+                        agent.traffic_light.transform.location.y,
+                        agent.traffic_light.transform.location.z])
 
                     w_pos = int(agent_position[0] * (
                             float(self._window_height) / float(self._map_shape[0])))
                     h_pos = int(agent_position[1] * (new_window_width / float(self._map_shape[1])))
 
-                    pygame.draw.circle(surface, [255, 0, 255, 255], (w_pos, h_pos), 4, 0)
+                    pygame.draw.circle(surface, color, (w_pos, h_pos), 4, 0)
 
             self._display.blit(surface, (self._window_width, 0))
+
+
 
         pygame.display.flip()

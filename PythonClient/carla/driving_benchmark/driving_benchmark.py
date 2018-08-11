@@ -69,6 +69,13 @@ class DrivingBenchmark(object):
         # We have a default planner instantiated that produces high level commands
         self._planner = Planner(city_name)
 
+        # TO keep track of the previous collisions
+        self._previous_pedestrian_collision = 0
+        self._previous_vehicle_collision = 0
+        self._previous_other_collision = 0
+
+
+
     def benchmark_agent(self, experiment_suite, agent, client):
         """
         Function to benchmark the agent.
@@ -196,19 +203,23 @@ class DrivingBenchmark(object):
         """
             This function must have a certain state and only look to one measurement.
         """
+        collided = False
 
-        # Computing general collisions
+        if (measurement.collision_vehicles - self._previous_vehicle_collision) \
+                > metrics_parameters['collision_vehicles']['threshold']/2.0:
+            collided = True
+        if (measurement.collision_pedestrians - self._previous_pedestrian_collision) \
+                > metrics_parameters['collision_pedestrians']['threshold']/2.0:
+            collided = True
+        if (measurement.collision_other - self._previous_other_collision) \
+                > metrics_parameters['collision_other']['threshold']/2.0:
+            collided = True
 
-        if measurement.collision_pedestrians > metrics_parameters['collision_pedestrians']['threshold']:
-            return True
-        if measurement.collision_vehicles > metrics_parameters['collision_vehicles']['threshold']:
-            return True
-        if measurement.collision_other > metrics_parameters['collision_other']['threshold']:
-            return True
+        self._previous_pedestrian_collision = measurement.collision_pedestrians
+        self._previous_vehicle_collision = measurement.collision_vehicles
+        self._previous_other_collision = measurement.collision_other
 
-        return False
-
-
+        return collided
 
     def _run_navigation_episode(
             self,

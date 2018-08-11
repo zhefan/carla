@@ -69,8 +69,7 @@ class CityTrack(object):
         return source == target
 
     def is_at_new_node(self, current_node):
-        print ( " Current ", current_node)
-        print ( " previous ", self._previous_node)
+
         return current_node != self._previous_node
 
     def is_away_from_intersection(self, current_node):

@@ -16,6 +16,76 @@ class ObstacleAvoidance(object):
         # Select WP Number
 
 
+    def is_traffic_light_visible(self, location, agent):
+
+        x_agent = agent.traffic_light.transform.location.x
+        y_agent = agent.traffic_light.transform.location.y
+
+        _, tl_dist = get_vec_dist(x_agent, y_agent, location.x, location.y)
+
+        return tl_dist > (self.param['tl_min_dist_thres'])
+
+    def is_traffic_light_active(self, location, agent):
+
+        x_agent = agent.traffic_light.transform.location.x
+        y_agent = agent.traffic_light.transform.location.y
+
+        #_, tl_dist = get_vec_dist(x_agent, y_agent, location.x, location.y)
+        def search_closest_lane_point(x_agent, y_agent, depth):
+            step_size = 4
+            #print ('depth ', depth, 'x_agent', x_agent, 'y_agent', y_agent)
+            if depth > 1:
+                return None
+            try:
+                degrees = self._map.get_lane_orientation_degrees([x_agent, y_agent, 38])
+                #print (degrees)
+            except:
+                return None
+
+            if not self._map.is_point_on_lane([x_agent, y_agent, 38]):
+                #print (" Not on lane ")
+                result = search_closest_lane_point(x_agent + step_size, y_agent, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent, y_agent + step_size, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent + step_size, y_agent + step_size, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent + step_size, y_agent - step_size, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent - step_size, y_agent + step_size, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent - step_size, y_agent, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent, y_agent - step_size, depth+1)
+                if result is not None:
+                    return result
+                result = search_closest_lane_point(x_agent - step_size, y_agent - step_size, depth+1)
+                if result is not None:
+                    return result
+            else:
+                #print(" ON Lane ")
+                if degrees < 6:
+                    return [x_agent, y_agent]
+                else:
+                    return None
+
+
+
+
+        #print (" Start ")
+
+        closest_lane_point = search_closest_lane_point(x_agent, y_agent, 0)
+
+
+        return math.fabs(self._map.get_lane_orientation_degrees([location.x, location.y, 38]) -
+        self._map.get_lane_orientation_degrees([closest_lane_point[0], closest_lane_point[1], 38])) < 1
+
 
     def stop_traffic_light(self, location, agent, wp_vector, wp_angle, speed_factor_tl):
 
@@ -29,23 +99,37 @@ class ObstacleAvoidance(object):
             tl_angle = get_angle(tl_vector, wp_vector)
             # print ('Traffic Light: ', tl_vector, tl_dist, tl_angle)
 
-            if (0 < tl_angle < self.param['tl_angle_thres'] / self.param['coast_factor'] and tl_dist < self.param['tl_dist_thres'] * self.param['coast_factor']) or (
-                    0 < tl_angle < self.param['tl_angle_thres'] and tl_dist < self.param['tl_dist_thres']) and math.fabs(
-                wp_angle) < 0.2:
-                speed_factor_tl_temp = tl_dist / (self.param['coast_factor'] * self.param['tl_dist_thres'])
 
-            if (
-                    0 < tl_angle < self.param['tl_angle_thres'] * self.param['coast_factor'] and tl_dist < self.param['tl_dist_thres'] / self.param['coast_factor']) and math.fabs(
+            if (0 < tl_angle < self.param['tl_angle_thres'] / self.param['coast_factor']
+                and tl_dist < self.param['tl_max_dist_thres'] * self.param['coast_factor']) \
+                    or (
+                    0 < tl_angle < self.param['tl_angle_thres'] and tl_dist < self.param['tl_max_dist_thres']) and math.fabs(
+                wp_angle) < 0.2:
+
+                #print ()
+                #print (' case 1 Traffic Light')
+                #print ()
+
+                speed_factor_tl_temp = tl_dist / (self.param['coast_factor'] * self.param['tl_max_dist_thres'])
+
+            if (0 < tl_angle < self.param['tl_angle_thres'] * self.param['coast_factor'] and tl_dist < self.param['tl_max_dist_thres'] / self.param['coast_factor']) and math.fabs(
                 wp_angle) < 0.2:
                 speed_factor_tl_temp = 0
+                #print ()
+                #print (' case 2 Traffic Light')
+                #print ()
 
             if (speed_factor_tl_temp < speed_factor_tl):
                 speed_factor_tl = speed_factor_tl_temp
 
         return speed_factor_tl
 
+
+
+
+
         # TODO this functions should be all separate.
-    def is_pedestrian_hitable(self):
+    def is_pedestrian_hitable(self, pedestrian):
 
         """
         Determine if a certain pedestrian is in a hitable zone or it is pasible
@@ -54,26 +138,57 @@ class ObstacleAvoidance(object):
         of the lane but with velocity vector pointing to lane.
         :return:
         """
-        pass
+
+
+        # TODO: for now showing only if pedestrians are on the road
+
+        x_agent = pedestrian.transform.location.x
+        y_agent = pedestrian.transform.location.y
+
+
+        return self._map.is_point_on_lane([x_agent, y_agent, 38])
+
+    def is_vehicle_on_same_lane(self, player, vehicle):
+        """
+            Check if the vehicle is on the same lane as the player
+        :return:
+        """
+
+        x_agent = vehicle.transform.location.x
+        y_agent = vehicle.transform.location.y
+
+        if self._map.is_point_on_intersection([x_agent, y_agent, 38]):
+            return True
+
+
+        return math.fabs(self._map.get_lane_orientation_degrees([player.x, player.y, 38]) -
+        self._map.get_lane_orientation_degrees([x_agent, y_agent, 38])) < 1
+
+
+
+
+
+
+    def is_pedestrian_on_hit_zone(self, p_dist, p_angle):
+        """
+        Draw a semi circle with a big radius but small period from the circunference.
+        Pedestrians on this zone will cause the agent to reduce the speed
+
+        """
+
+        return math.fabs(p_angle) < self.param['p_angle_hit_thres'] and p_dist < self.param['p_dist_hit_thres']
+
+
+    def is_pedestrian_on_near_hit_zone(self, p_dist, p_angle):
+
+        return math.fabs(p_angle) < self.param['p_angle_eme_thres'] and p_dist < self.param['p_dist_eme_thres']
+
 
     def stop_pedestrian(self, location, agent, wp_vector, speed_factor_p):
 
 
-        def is_pedestrian_on_hit_zone():
-            """
-            Draw a semi circle with a big radius but small period from the circunference.
-            Pedestrians on this zone
-            :return:
-            """
 
-            pass
-
-
-
-        def is_pedestrian_on_near_hit_zone():
-
-            pass
-
+        """
         if is_pedestrian_on_near_hit_zone():
 
             return 0
@@ -81,12 +196,7 @@ class ObstacleAvoidance(object):
         if is_pedestrian_on_hit_zone():
             # return  some proportional to distance deacceleration constant.
             pass
-
-
-
-
         """
-
         speed_factor_p_temp = 1
 
         x_agent = agent.pedestrian.transform.location.x
@@ -96,34 +206,24 @@ class ObstacleAvoidance(object):
         p_angle = get_angle(p_vector, wp_vector)
 
         # Define flag, if pedestrian is outside the sidewalk ?
+        # print('Pedestrian: ', p_vector, p_dist, p_angle)
+
+        if self.is_pedestrian_on_hit_zone(p_dist, p_angle):
+
+            speed_factor_p_temp = p_dist / (self.param['coast_factor'] * self.param['p_dist_hit_thres'])
 
 
-        if (math.fabs(
-                p_angle) < self.param['p_angle_thres'] / self.param['coast_factor'] and p_dist < self.param['p_dist_thres'] * self.param['coast_factor']) or (
-                0 < p_angle < self.param['p_angle_thres'] and p_dist < self.param['p_dist_thres']
-            ):
+            #print()
+            #print (" CASE 1 Pedestrian")
+            #print()
 
-            if self._map.is_point_on_lane([x_agent, y_agent, 38]):
-                print("PEDESTRIAN ON LANE ")
-                #speed_factor_p_temp = p_dist / (self.param['coast_factor'] * self.param['p_dist_thres'])
-                speed_factor_p_temp = 0
-                print('Pedestrian: ', p_vector, p_dist, p_angle)
+        if self.is_pedestrian_on_near_hit_zone(p_dist, p_angle):
 
-                print(" Resulting speed factor ", speed_factor_p)
-                print (" Case 1 ")
-            else:
-                print ('Pedestrian close not on lane')
+            speed_factor_p_temp = 0
+            #print()
+            #print(" Case 2 Pedestrian")
+            #print()
 
-        if (math.fabs(
-                p_angle) < self.param['p_angle_thres'] * self.param['coast_factor'] and p_dist < self.param['p_dist_thres'] / self.param['coast_factor']):
-
-            if self._map.is_point_on_lane([x_agent, y_agent, 38]):
-                print("PEDESTRIAN ON LANE ")
-                speed_factor_p_temp = 0
-                print('Pedestrian: ', p_vector, p_dist, p_angle)
-                print(" Case 2 ")
-            else:
-                print ('Pedestrian close not on lane')
 
 
         if (speed_factor_p_temp < speed_factor_p):
@@ -131,9 +231,11 @@ class ObstacleAvoidance(object):
 
 
         return speed_factor_p
-        """
+
 
     def stop_vehicle(self, location, agent, wp_vector, speed_factor_v):
+
+
         speed_factor_v_temp = 1
         x_agent = agent.vehicle.transform.location.x
         y_agent = agent.vehicle.transform.location.y
@@ -146,9 +248,16 @@ class ObstacleAvoidance(object):
                 -0.5 * self.param['v_angle_thres'] / self.param['coast_factor'] < v_angle < self.param['v_angle_thres'] / self.param['coast_factor'] and v_dist < self.param['v_dist_thres'] * self.param['coast_factor']) or (
                 -0.5 * self.param['v_angle_thres'] / self.param['coast_factor'] < v_angle < self.param['v_angle_thres'] and v_dist < self.param['v_dist_thres']):
             speed_factor_v_temp = v_dist / (self.param['coast_factor'] * self.param['v_dist_thres'])
+            #print()
+            #print(' case 1 Vehicle ')
+            #print()
+
         if (
                 -0.5 * self.param['v_angle_thres'] * self.param['coast_factor'] < v_angle < self.param['v_angle_thres'] * self.param['coast_factor'] and v_dist < self.param['v_dist_thres'] / self.param['coast_factor']):
             speed_factor_v_temp = 0
+            #print()
+            #print(' case 1 Vehicle ')
+            #print()
 
         if (speed_factor_v_temp < speed_factor_v):
             speed_factor_v = speed_factor_v_temp
@@ -162,23 +271,33 @@ class ObstacleAvoidance(object):
         speed_factor_p = 1
         speed_factor_v = 1
         hitable_pedestrians = []    # The list of pedestrians that are on roads or nearly on roads
+
         for agent in agents:
-
             if agent.HasField('traffic_light') and self.param['stop4TL']:
-                speed_factor_tl = self.stop_traffic_light(location, agent, wp_angle,
-                                                          wp_vector, speed_factor_tl)
-            if agent.HasField('pedestrian') and self.param['stop4P']:
-                if self.is_pedestrian_hitable(agent):
+                if self.is_traffic_light_active(location, agent) and self.is_traffic_light_visible(location, agent):
 
+                    speed_factor_tl = self.stop_traffic_light(location, agent, wp_vector,
+                                                              wp_angle, speed_factor_tl)
+                    hitable_pedestrians.append(agent.id)
+
+            if agent.HasField('pedestrian') and self.param['stop4P']:
+                if self.is_pedestrian_hitable(agent.pedestrian):
 
                     speed_factor_p = self.stop_pedestrian(location, agent, wp_vector, speed_factor_p)
 
-                    hitable_pedestrians.append(agent)
-
 
             if agent.HasField('vehicle') and self.param['stop4V']:
-                speed_factor_v = self.stop_vehicle(location, agent, wp_vector, speed_factor_v)
+                if self.is_vehicle_on_same_lane(player=location, vehicle=agent.vehicle):
+                    speed_factor_v = self.stop_vehicle(location, agent, wp_vector, speed_factor_v)
+
 
             speed_factor = min(speed_factor_tl, speed_factor_p, speed_factor_v)
 
-        return speed_factor, hitable_pedestrians
+
+        state = {
+            'stop_pedestrian': speed_factor_p,
+            'stop_vehicle': speed_factor_v,
+            'stop_traffic_lights': speed_factor_tl
+        }
+
+        return speed_factor, hitable_pedestrians, state

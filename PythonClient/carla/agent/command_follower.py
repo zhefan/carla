@@ -14,38 +14,41 @@ class CommandFollower(Agent):
     def __init__(self, town_name):
 
         # The necessary parameters for the obstacle avoidance module.
-        param_obstacles = {
-            'stop4TL': False,  # Stop for traffic lights
+        self.param_obstacles = {
+            'stop4TL': True,  # Stop for traffic lights
             'stop4P': True,  # Stop for pedestrians
             'stop4V': True,  # Stop for vehicles
             'coast_factor': 2,  # Factor to control coasting
-            'tl_dist_thres': 15,  # Distance Threshold Traffic Light
+            'tl_min_dist_thres': 9,  # Distance Threshold Traffic Light
+            'tl_max_dist_thres': 20,  # Distance Threshold Traffic Light
             'tl_angle_thres': 0.5,  # Angle Threshold Traffic Light
-            'p_dist_thres': 25,  # Distance Threshold Pedestrian
-            'p_angle_thres': 0.5,  # Angle Threshold Pedestrian
+            'p_dist_hit_thres': 35,  # Distance Threshold Pedestrian
+            'p_angle_hit_thres': 0.15,  # Angle Threshold Pedestrian
+            'p_dist_eme_thres': 12,  # Distance Threshold Pedestrian
+            'p_angle_eme_thres': 0.5,  # Angle Threshold Pedestrian
             'v_dist_thres': 15,  # Distance Threshold Vehicle
-            'v_angle_thres': 0.35  # Angle Threshold Vehicle
+            'v_angle_thres': 0.40  # Angle Threshold Vehicle
 
         }
         # The used parameters for the controller.
-        param_controller = {
-            'default_throttle': 0.5,  # Default Throttle
+        self.param_controller = {
+            'default_throttle': 0.0,  # Default Throttle
             'default_brake': 0.0,  # Default Brake
             'steer_gain': 0.7,  # Gain on computed steering angle
             'brake_strength': 1,  # Strength for applying brake - Value between 0 and 1
             'pid_p': 0.25,  # PID speed controller parameters
-            'pid_i': 0.005,
+            'pid_i': 0.20,
             'pid_d': 0.00,
-            'target_speed': 35,  # Target speed - could be controlled by speed limit
+            'target_speed': 36,  # Target speed - could be controlled by speed limit
             'throttle_max': 0.75,
         }
 
 
         self.wp_num_steer = 0.9  # Select WP - Reverse Order: 1 - closest, 0 - furthest
-        self.wp_num_speed = 0.2  # Select WP - Reverse Order: 1 - closest, 0 - furthest
+        self.wp_num_speed = 0.4  # Select WP - Reverse Order: 1 - closest, 0 - furthest
         self.waypointer = Waypointer(town_name)
-        self.obstacle_avoider = ObstacleAvoidance(param_obstacles, town_name)
-        self.controller = Controller(param_controller)
+        self.obstacle_avoider = ObstacleAvoidance(self.param_obstacles, town_name)
+        self.controller = Controller(self.param_controller)
 
 
 
@@ -115,13 +118,23 @@ class CommandFollower(Agent):
         # print ('Car Vector: ', player.transform.orientation.x, player.transform.orientation.y)
         # print ('Waypoint Angle: ', wp_angle, ' Magnitude: ', wp_mag)
 
-        speed_factor = self.obstacle_avoider.stop_for_agents(player.transform.location, wp_angle,
+        # State is a representation of any of the cases, represented by a dictionary
+        # { stop_pedestrian
+        #   stop_cars
+        #   stop_traffic_lights
+        #  }
+
+        speed_factor, info, state = self.obstacle_avoider.stop_for_agents(player.transform.location, wp_angle,
                                                              wp_vector, agents)
+
+
 
 
 
         # We should run some state machine around here
         control = self.controller.get_control(wp_angle, wp_angle_speed, speed_factor,
                                               player.forward_speed*3.6)
+        fovs = [[self.param_obstacles['p_dist_hit_thres'], self.param_obstacles['p_angle_hit_thres'] ],
+                [self.param_obstacles['p_dist_eme_thres'], self.param_obstacles['p_angle_eme_thres']]]
 
-        return control, waypoints, route
+        return control, waypoints, waypoints_world, route, info, fovs, state
