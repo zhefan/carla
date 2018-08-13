@@ -329,6 +329,6 @@ class LidarMeasurement(SensorData):
         """
         return self.point_cloud.array
 
-    def save_to_disk(self, filename):
+    def save_to_disk(self, filename, format='.ply'):
         """Save point-cloud to disk as PLY format."""
-        self.point_cloud.save_to_disk(filename)
+        self.point_cloud.save_to_disk(filename, format)
