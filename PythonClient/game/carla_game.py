@@ -142,8 +142,8 @@ class CarlaGame(object):
             player_position = self._map.convert_to_pixel([
                 player_position.x, player_position.y, player_position.z])
 
-            if sldist(player_position, self._goal_position) < 7.0:
-                return True
+        if sldist(player_position, self._goal_position) < 7.0:
+            return True
 
         if not self._render_mode:
             return False
