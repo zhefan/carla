@@ -88,12 +88,12 @@ class CarlaGame(object):
         self._render_mode = render_mode
 
         self._map_name = map_name
+        self._map = CarlaMap(map_name, 0.1643, 50.0)
+        self._map_shape = self._map.map_image.shape
+        self._map_view = self._map.get_map(self._window_height)
 
         if self._render_mode:
             if self._display_map:
-                self._map = CarlaMap(map_name, 0.1643, 50.0)
-                self._map_shape = self._map.map_image.shape
-                self._map_view = self._map.get_map(self._window_height)
 
                 extra_width = int(
                     (self._window_height / float(self._map_shape[0])) * self._map_shape[1])
@@ -123,11 +123,10 @@ class CarlaGame(object):
         Returns:
 
         """
-        if self._display_map:
-            goal_position = self._map.convert_to_pixel([
-                goal_position.location.x, goal_position.location.y, goal_position.location.z])
 
-            
+        goal_position = self._map.convert_to_pixel([
+            goal_position.location.x, goal_position.location.y, goal_position.location.z])
+
         self._goal_position = goal_position
 
     def is_reset(self, player_position):
@@ -140,9 +139,8 @@ class CarlaGame(object):
 
         """
 
-        if self._display_map:
-            player_position = self._map.convert_to_pixel([
-                player_position.x, player_position.y, player_position.z])
+        player_position = self._map.convert_to_pixel([
+            player_position.x, player_position.y, player_position.z])
 
         if sldist(player_position, self._goal_position) < 7.0:
             return True

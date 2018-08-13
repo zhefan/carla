@@ -215,7 +215,7 @@ def _make_sensor_parsers(sensors):
             sensor.PointCloud(frame_number, points))
 
     class SensorDefinition(object):
-        def     __init__(self, s):
+        def __init__(self, s):
             self.id = s.id
             self.name = s.name
             self.type = s.type

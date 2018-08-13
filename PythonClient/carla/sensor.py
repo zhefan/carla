@@ -171,9 +171,9 @@ class Image(SensorData):
                 self._converted_data = image_converter.to_rgb_array(self)
         return self._converted_data
 
-    def save_to_disk(self, filename):
+    def save_to_disk(self, filename, format='.png'):
         """Save this image to disk (requires PIL installed)."""
-        filename = _append_extension(filename, '.png')
+        filename = _append_extension(filename, format)
 
         try:
             from PIL import Image as PImage
