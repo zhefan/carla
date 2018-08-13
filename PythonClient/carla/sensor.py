@@ -235,9 +235,9 @@ class PointCloud(SensorData):
         """Modify the PointCloud instance transforming its points"""
         self._array = transformation.transform_points(self._array)
 
-    def save_to_disk(self, filename):
+    def save_to_disk(self, filename, format='.ply'):
         """Save this point-cloud to disk as PLY format."""
-        filename = _append_extension(filename, '.ply')
+        filename = _append_extension(filename, format)
 
         def construct_ply_header():
             """Generates a PLY header given a total number of 3D points and
