@@ -126,7 +126,9 @@ class CarlaGame(object):
         if self._display_map:
             goal_position = self._map.convert_to_pixel([
                 goal_position.location.x, goal_position.location.y, goal_position.location.z])
-            self._goal_position = goal_position
+
+            
+        self._goal_position = goal_position
 
     def is_reset(self, player_position):
         """
