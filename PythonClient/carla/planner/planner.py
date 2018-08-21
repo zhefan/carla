@@ -122,8 +122,8 @@ class Planner(object):
             current_pos = node_iter
 
         # We multiply by these values to convert distance to world coordinates
-        return distance * self._city_track.get_pixel_density() \
-               * self._city_track.get_node_density()
+        return distance * float(self._city_track.get_pixel_density()) \
+               * float(self._city_track.get_node_density())
 
     def is_there_posible_route(self, source, source_ori, target, target_ori):
 
