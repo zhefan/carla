@@ -192,7 +192,7 @@ class Image(SensorData):
         folder = os.path.dirname(filename)
         if not os.path.isdir(folder):
             os.makedirs(folder)
-        image.save(filename)
+        image.save(filename, quality=100)
 
 
 class PointCloud(SensorData):

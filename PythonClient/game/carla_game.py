@@ -401,16 +401,16 @@ class CarlaGame(object):
             self._draw_goal_position(surface)
             pygame.draw.circle(surface, [255, 0, 0, 255], (w_pos, h_pos), 3, 0)
             for agent in agents_positions:
-                if agent.HasField('traffic_light'):
+                if agent.HasField('pedestrian'):
                     if  hitable_pedestrians is not None and agent.id in hitable_pedestrians:
                         color = [255, 128, 0, 255]
                     else:
                         color = [255, 0, 255, 255]
 
                     agent_position = self._map.convert_to_pixel([
-                        agent.traffic_light.transform.location.x,
-                        agent.traffic_light.transform.location.y,
-                        agent.traffic_light.transform.location.z])
+                        agent.pedestrian.transform.location.x,
+                        agent.pedestrian.transform.location.y,
+                        agent.pedestrian.transform.location.z])
 
                     w_pos = int(agent_position[0] * (
                             float(self._window_height) / float(self._map_shape[0])))

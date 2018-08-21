@@ -5,10 +5,11 @@ import os
 
 class Recording(object):
 
-    def __init__(self
-                 , name_to_save
-                 , continue_experiment
-                 , save_images
+    def __init__(self,
+                 name_to_save,
+                 continue_experiment,
+                 save_images
+
                  ):
 
         self._dict_summary = {'exp_id': -1,
@@ -20,7 +21,10 @@ class Recording(object):
                               'initial_distance': -1,
                               'final_distance': -1,
                               'final_time': -1,
-                              'time_out': -1
+                              'time_out': -1,
+                              'end_pedestrian_collision': -1,
+                              'end_vehicle_collision': -1,
+                              'end_other_collision': -1
                               }
         self._dict_measurements = {'exp_id': -1,
                                    'rep': -1,
@@ -91,7 +95,8 @@ class Recording(object):
 
     def write_summary_results(self, experiment, pose, rep,
                               path_distance, remaining_distance,
-                              final_time, time_out, result):
+                              final_time, time_out, result,
+                              end_pedestrian, end_vehicle, end_other):
         """
         Method to record the summary of an episode(pose) execution
         """
@@ -106,6 +111,11 @@ class Recording(object):
         self._dict_summary['final_distance'] = remaining_distance
         self._dict_summary['final_time'] = final_time
         self._dict_summary['time_out'] = time_out
+        self._dict_summary['end_pedestrian_collision'] = end_pedestrian
+        self._dict_summary['end_vehicle_collision'] = end_vehicle
+        self._dict_summary['end_other_collision'] = end_other
+
+
 
         with open(os.path.join(self._path, 'summary.csv'), 'a+') as ofd:
             w = csv.DictWriter(ofd, self._dict_summary.keys())

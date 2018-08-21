@@ -68,8 +68,8 @@ class Planner(object):
             return REACH_GOAL
 
 
-        if (self._city_track.is_at_new_node(track_source)):
-                #and self._city_track.is_away_from_intersection(track_source)):
+        if (self._city_track.is_at_new_node(track_source)
+                and self._city_track.is_away_from_intersection(track_source)):
 
             route = self._city_track.compute_route(track_source, source_ori,
                                                    track_target, target_ori)
@@ -173,4 +173,5 @@ class Planner(object):
 
             commands_list.append(command)
 
+        print (" CMD lit ", commands_list)
         return commands_list

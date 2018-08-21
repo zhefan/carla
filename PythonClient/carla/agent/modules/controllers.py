@@ -22,6 +22,7 @@ class Controller(object):
 
     def get_control(self, wp_angle, wp_angle_speed, speed_factor, current_speed):
         control = VehicleControl()
+        current_speed = max(current_speed, 0)
 
         steer = self.params['steer_gain'] * wp_angle
         if steer > 0:
@@ -39,9 +40,9 @@ class Controller(object):
 
         self.pid.target = target_speed_adjusted
         pid_gain = self.pid(feedback=current_speed)
-        #print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
-        #print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
-        #       speed_factor)
+        print ('Target: ', self.pid.target, 'Error: ', self.pid.error, 'Gain: ', pid_gain)
+        print ('Target Speed: ', target_speed_adjusted, 'Current Speed: ', current_speed, 'Speed Factor: ',
+               speed_factor)
 
         throttle = min(max(self.params['default_throttle'] - 1.3 * pid_gain, 0),
                        self.params['throttle_max'])
@@ -52,7 +53,7 @@ class Controller(object):
             brake = 0
 
 
-        control.throttle = max(throttle, 0.01)  # Prevent N by putting at least 0.01
+        control.throttle = max(throttle, 0)  # Prevent N by putting at least 0.01
         control.brake = brake
 
         print ('Throttle: ', control.throttle, 'Brake: ', control.brake, 'Steering Angle: ', control.steer)

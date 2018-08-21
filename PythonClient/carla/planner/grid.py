@@ -21,10 +21,12 @@ class Grid(object):
         self._walls = self._make_walls()
 
     def search_on_grid(self, x, y):
-        visit = [[0, 1], [0, -1], [1, 0], [1, 1],
-                 [1, -1], [-1, 0], [-1, 1], [-1, -1]]
+        visit = [[0, 1], [0, -1], [1, 0], [-1, 0],
+                 [1, -1], [1, 1], [-1, 1], [-1, -1]]
         c_x, c_y = x, y
         scale = 1
+
+
         while self._structure[c_x, c_y] != 0:
             for offset in visit:
                 c_x, c_y = x + offset[0] * scale, y + offset[1] * scale

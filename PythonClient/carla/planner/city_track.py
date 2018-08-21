@@ -36,11 +36,13 @@ class CityTrack(object):
         """
 
         node = self._map.convert_to_node(position)
-        #print ("Converted Node ", node)
+        print ("Converted Node ", node)
+
+
 
         # To change the orientation with respect to the map standards
 
-        node = tuple([int(x) for x in node])
+        node = tuple([int(round(x)) for x in node])
 
         # Set to zero if it is less than zero.
 
@@ -49,7 +51,7 @@ class CityTrack(object):
                 min(self._map.get_graph_resolution()[1] - 1, node[1]))
 
         node = self._map.search_on_grid(node)
-        #print("Final Node ", node)
+        print("Final Node ", node)
 
         return node
 
@@ -116,7 +118,7 @@ class CityTrack(object):
 
         printing_grid[node_target[0], node_target[1]] = 2
 
-        #print(printing_grid)
+        print(printing_grid)
 
         # JuSt a Corner Case
         # Clean this to avoid having to use this function
@@ -145,7 +147,7 @@ class CityTrack(object):
 
         """
         if route is None:
-            a_star = AStar()
+            a_star = AStar()    
             a_star.init_grid(self._map.get_graph_resolution()[0],
                              self._map.get_graph_resolution()[1], self._map.get_walls(),
                              node_source, node_target)

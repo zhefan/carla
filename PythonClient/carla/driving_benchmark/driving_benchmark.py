@@ -137,7 +137,7 @@ class DrivingBenchmark(object):
                         self._get_shortest_path(positions[start_index], positions[end_index]))
 
                     # running the agent
-                    (result, reward_vec, control_vec, final_time, remaining_distance) = \
+                    (result, reward_vec, control_vec, final_time, remaining_distance, col_ped, col_veh, col_oth) = \
                         self._run_navigation_episode(
                             agent, client, time_out, positions[end_index],
                             str(experiment.Conditions.WeatherId) + '_'
@@ -148,7 +148,7 @@ class DrivingBenchmark(object):
                     # Write the general status of the just ran episode
                     self._recording.write_summary_results(
                         experiment, pose, rep, initial_distance,
-                        remaining_distance, final_time, time_out, result)
+                        remaining_distance, final_time, time_out, result, col_ped, col_veh, col_oth)
 
                     # Write the details of this episode.
                     self._recording.write_measurements_results(experiment, rep, pose, reward_vec,
@@ -203,23 +203,25 @@ class DrivingBenchmark(object):
         """
             This function must have a certain state and only look to one measurement.
         """
-        collided = False
+        collided_veh = 0
+        collided_ped = 0
+        collided_oth = 0
 
         if (measurement.collision_vehicles - self._previous_vehicle_collision) \
                 > metrics_parameters['collision_vehicles']['threshold']/2.0:
-            collided = True
+            collided_veh = 1
         if (measurement.collision_pedestrians - self._previous_pedestrian_collision) \
                 > metrics_parameters['collision_pedestrians']['threshold']/2.0:
-            collided = True
+            collided_ped = 1
         if (measurement.collision_other - self._previous_other_collision) \
                 > metrics_parameters['collision_other']['threshold']/2.0:
-            collided = True
+            collided_oth = 1
 
         self._previous_pedestrian_collision = measurement.collision_pedestrians
         self._previous_vehicle_collision = measurement.collision_vehicles
         self._previous_other_collision = measurement.collision_other
 
-        return collided
+        return collided_ped, collided_veh, collided_oth
 
     def _run_navigation_episode(
             self,
@@ -258,6 +260,7 @@ class DrivingBenchmark(object):
         control_vec = []
         frame = 0
         distance = 10000
+        col_ped, col_veh, col_oth = 0, 0, 0
         fail = False
         success = False
 
@@ -294,12 +297,12 @@ class DrivingBenchmark(object):
                 float(distance), current_x, current_y, target.location.x,
                 target.location.y)
             # Check if reach the target
+            col_ped, col_veh, col_oth = self._has_agent_collided(measurements.player_measurements, metrics_parameters)
             if distance < self._distance_for_success:
                 success = True
             elif (current_timestamp - initial_timestamp) > (time_out * 1000):
                 fail = True
-            elif self._has_agent_collided(measurements.player_measurements, metrics_parameters) \
-                    and collision_as_failure:
+            elif collision_as_failure and (col_ped or col_veh or col_oth):
                 fail = True
 
 
@@ -310,8 +313,8 @@ class DrivingBenchmark(object):
 
         if success:
             return 1, measurement_vec, control_vec, float(
-                current_timestamp - initial_timestamp) / 1000.0, distance
-        return 0, measurement_vec, control_vec, time_out, distance
+                current_timestamp - initial_timestamp) / 1000.0, distance,  col_ped, col_veh, col_oth
+        return 0, measurement_vec, control_vec, time_out, distance, col_ped, col_veh, col_oth
 
 
 def run_driving_benchmark(agent,

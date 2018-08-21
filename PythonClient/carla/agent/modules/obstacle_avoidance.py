@@ -278,13 +278,13 @@ class ObstacleAvoidance(object):
 
                     speed_factor_tl = self.stop_traffic_light(location, agent, wp_vector,
                                                               wp_angle, speed_factor_tl)
-                    hitable_pedestrians.append(agent.id)
+
 
             if agent.HasField('pedestrian') and self.param['stop4P']:
                 if self.is_pedestrian_hitable(agent.pedestrian):
 
                     speed_factor_p = self.stop_pedestrian(location, agent, wp_vector, speed_factor_p)
-
+                    hitable_pedestrians.append(agent.id)
 
             if agent.HasField('vehicle') and self.param['stop4V']:
                 if self.is_vehicle_on_same_lane(player=location, vehicle=agent.vehicle):

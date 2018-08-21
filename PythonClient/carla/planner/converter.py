@@ -68,9 +68,11 @@ class Converter(object):
         input_type = self._check_input_type(input_data)
 
         if input_type == NODE:
+
             return self._node_to_pixel(input_data)
         elif input_type == WORLD:
-            return self._world_to_pixel(input_data)
+            pixel = self._world_to_pixel(input_data)
+            return [math.floor(pixel[0]), math.floor(pixel[1])]
         else:
             raise ValueError('Invalid node to be converted')
 
@@ -106,8 +108,8 @@ class Converter(object):
         :param node:
         :return: pixel
         """
-        node = [int(((pixel[0]) / self._node_density) - 2)
-            , int(((pixel[1]) / self._node_density) - 2)]
+        node = [int(round((pixel[0]) / self._node_density, 0) - 2),
+                int(round((pixel[1]) / self._node_density, 0) - 2)]
 
         return tuple(node)
 
@@ -145,8 +147,8 @@ class Converter(object):
 
 
 
-        pixel = [math.floor(relative_location[0] / float(self._pixel_density)),
-                 math.floor(relative_location[1] / float(self._pixel_density))]
+        pixel = [(relative_location[0] / float(self._pixel_density)),
+                 (relative_location[1] / float(self._pixel_density))]
 
         return pixel
 
