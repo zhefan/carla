@@ -1,6 +1,17 @@
 CARLA Simulator
 ===============
 
+Extra
+---
+
+Setup instructions: [Google Doc](https://docs.google.com/document/d/1DGxofOAwOq62EJRZKcxoH4oP-T0bvF62KYW_V57ilv4/edit)  
+Do pip/pip3 install for requirements  
+`sudo pip install -r requirements.txt`  
+`sudo pip3 install -r requirements.txt`  
+To run Carla:  
+`~/UnrealEngine_4.18/Engine/Binaries/Linux/UE4Editor /home/zhefanye/catkin_ws/src/carla/Unreal/CarlaUE4/CarlaUE4.uproject`
+
+
 [![Build Status](https://travis-ci.org/carla-simulator/carla.svg?branch=master)](https://travis-ci.org/carla-simulator/carla)
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
 [![Waffle.io](https://badge.waffle.io/carla-simulator/carla.svg?columns=Next,In%20Progress,Review)](https://waffle.io/carla-simulator/carla)
