@@ -19,7 +19,7 @@ class CommandFollower(Agent):
             'stop4P': True,  # Stop for pedestrians
             'stop4V': True,  # Stop for vehicles
             'coast_factor': 2,  # Factor to control coasting
-            'tl_min_dist_thres': 9,  # Distance Threshold Traffic Light
+            'tl_min_dist_thres': 6,  # Distance Threshold Traffic Light
             'tl_max_dist_thres': 20,  # Distance Threshold Traffic Light
             'tl_angle_thres': 0.5,  # Angle Threshold Traffic Light
             'p_dist_hit_thres': 35,  # Distance Threshold Pedestrian
