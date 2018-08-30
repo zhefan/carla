@@ -101,7 +101,7 @@ def main():
         help='Indices of the positions that you want to plot on the map. '
              'The indices must be separated by commas (default = all positions)')
     argparser.add_argument(
-        '--no-labels',
+        '--no_labels',
         action='store_true',
         help='do not display position indices')
 

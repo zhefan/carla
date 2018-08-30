@@ -29,3 +29,7 @@ _images*
 _out
 _site
 core
+
+# misc
+.vscode/
+**/town_positions.pdf

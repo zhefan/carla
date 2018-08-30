@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
-
-# Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
+'''
+Project: /home/zhefanye/catkin_ws/src/carla/PythonClient
+Created Date: Monday, August 27th 2018, 12:34:32 pm
+Author: Zhefan Ye <zhefanye@gmail.com>
+-----
+Copyright (c) 2018 TBD
+Do whatever you want
+'''
 
 import argparse
 import logging
 
 from carla.driving_benchmark import run_driving_benchmark
-from carla.driving_benchmark.experiment_suites import CoRL2017
-from carla.driving_benchmark.experiment_suites import BasicExperimentSuite
+from carla.driving_benchmark.experiment_suites import TRIInitialExperimentSuite
 from carla.agent import ForwardAgent
 
 if __name__ == '__main__':
@@ -39,21 +39,10 @@ if __name__ == '__main__':
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-c', '--city_name',
-        metavar='C',
-        default='Town01',
-        help='The town that is going to be used on benchmark'
-             + '(needs to match active town in server, options: Town01 or Town02)')
-    argparser.add_argument(
         '-n', '--log_name',
         metavar='T',
         default='test',
         help='The name of the log file to be created by the benchmark'
-    )
-    argparser.add_argument(
-        '--corl-2017',
-        action='store_true',
-        help='If you want to benchmark the corl-2017 instead of the Basic one'
     )
     argparser.add_argument(
         '--continue_experiment',
@@ -62,6 +51,7 @@ if __name__ == '__main__':
     )
 
     args = argparser.parse_args()
+    args.city_name = 'Town01'  # iteration 1
     if args.debug:
         log_level = logging.DEBUG
     elif args.verbose:
@@ -78,13 +68,7 @@ if __name__ == '__main__':
 
     # We instantiate an experiment suite. Basically a set of experiments
     # that are going to be evaluated on this benchmark.
-    if args.corl_2017:
-        experiment_suite = CoRL2017(args.city_name)
-    else:
-        print (' WARNING: running the basic driving benchmark, to run for CoRL 2017'
-               ' experiment suites, you should run'
-               ' python driving_benchmark_example.py --corl-2017')
-        experiment_suite = BasicExperimentSuite(args.city_name)
+    experiment_suite = TRIInitialExperimentSuite(args.city_name)
 
     # Now actually run the driving_benchmark
     run_driving_benchmark(agent, experiment_suite, args.city_name,
