@@ -37,7 +37,7 @@ class TRIInitialExperimentSuite(ExperimentSuite):
         # The size of the vector is related to the number of tasks, inside each
         # task there is also multiple poses ( start end, positions )
         if self._city_name == 'Town01':
-            poses_tasks = [[[31, 49]]]
+            poses_tasks = [[[31, 34]]]
             vehicles_tasks = [0]
             pedestrians_tasks = [0]
         else:
@@ -47,10 +47,10 @@ class TRIInitialExperimentSuite(ExperimentSuite):
         # This single RGB camera is used on every experiment
 
         camera = Camera('CameraRGB')
-        camera.set(FOV=100)
+        camera.set(FOV=90)
         camera.set_image_size(800, 600)
-        camera.set_position(2.0, 0.0, 1.4)
-        camera.set_rotation(-15.0, 0, 0)
+        camera.set_position(0.20, 0, 1.30)
+        camera.set_rotation(8, 0, 0)
 
         # Based on the parameters, creates a vector with experiment objects.
         experiments_vector = []
@@ -63,10 +63,11 @@ class TRIInitialExperimentSuite(ExperimentSuite):
 
                 conditions = CarlaSettings()
                 conditions.set(
-                    SendNonPlayerAgentsInfo=True,
-                    NumberOfVehicles=vehicles,
-                    NumberOfPedestrians=pedestrians,
-                    WeatherId=weather
+                    SendNonPlayerAgentsInfo=False,
+                    NumberOfVehicles=0,
+                    NumberOfPedestrians=0,
+                    WeatherId=1,
+                    QualityLevel='Low'
                 )
                 # Add all the cameras that were set for this experiments
                 conditions.add_sensor(camera)
